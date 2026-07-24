@@ -1,0 +1,38 @@
+/* EmptyState / ErrorState / SkeletonLoader 공통 스타일. */
+.state-box {
+  background: var(--c-card);
+  border: 1px dashed var(--c-border-strong);
+  border-radius: var(--r-lg);
+  padding: var(--s-12) var(--s-4);
+  text-align: center;
+  color: var(--c-n-600);
+}
+.state-box__icon {
+  font-size: 32px;
+  margin-bottom: var(--s-3);
+}
+.state-box__title {
+  font-size: 18px;
+  color: var(--c-n-800);
+  margin-bottom: var(--s-2);
+}
+.state-box__actions {
+  margin-top: var(--s-4);
+  display: flex;
+  gap: var(--s-2);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.state-box--error {
+  border-color: var(--c-error);
+  color: var(--c-error);
+}
+.state-box--error .state-box__title {
+  color: var(--c-error);
+}
+
+.skeleton {
+  background: var(--c-n-100);
+  border-radius: var(--r-md);
+  animation: pulse 1.2s ease-in-out infinite;
+}

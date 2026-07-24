@@ -1,0 +1,42 @@
+.auth-wrap {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: var(--s-8) var(--s-4) var(--s-16);
+}
+.auth-brand {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--c-primary-700);
+  margin-bottom: var(--s-6);
+}
+.auth-card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
+  padding: var(--s-6);
+}
+.auth-card h1 {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: var(--s-2);
+}
+.auth-sub {
+  color: var(--c-n-600);
+  font-size: 14px;
+  margin-bottom: var(--s-6);
+}
+.auth-foot {
+  text-align: center;
+  margin-top: var(--s-6);
+  font-size: 14px;
+  color: var(--c-n-600);
+}
+.auth-foot a {
+  font-weight: 600;
+}
+.auth-gate-banner {
+  margin-bottom: var(--s-4);
+}

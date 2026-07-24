@@ -1,0 +1,17 @@
+.guest-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  background: var(--c-info-bg);
+  color: var(--c-info);
+  border: 1px solid var(--c-info);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  margin-bottom: var(--s-4);
+}
+.guest-banner a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}

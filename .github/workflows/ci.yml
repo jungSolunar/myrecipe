@@ -1,0 +1,127 @@
+name: CI
+
+# 1차 출시(Must US-001~010) 게이트.
+# - backend : pytest
+# - frontend: lint + test + build
+# - harness : 회귀 방지 하네스(./harness/check.sh)
+#
+# 로컬 재현:
+#   backend : cd server && python -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m pytest -q
+#   frontend: cd web && npm ci && npm run lint && npm test && npm run build
+#   harness : ./harness/check.sh
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 시크릿은 리포지토리에 커밋하지 않는다. CI에서 필요한 값은 GitHub Actions
+# Secrets(예: SECRET_KEY)로 주입한다. 테스트는 임시 DB/시크릿을 자체 생성한다.
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # backend: Python 셋업 → 의존성 설치 → pytest
+  # manifest.json 의 server 테스트 명령이 `.venv/bin/python`을 쓰므로
+  # 동일하게 server/.venv 를 만들어 로컬/하네스와 재현성을 맞춘다.
+  # ---------------------------------------------------------------------------
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies (venv)
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt
+      - name: Run pytest
+        run: .venv/bin/python -m pytest -q
+
+  # ---------------------------------------------------------------------------
+  # frontend: Node 셋업 → lint + test + build
+  # ---------------------------------------------------------------------------
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # harness: 회귀 방지 하네스 (보호 파일 무결성 + API 계약 호환 + 특성화 테스트)
+  #
+  # check.sh 종료코드 규약:
+  #   0 = 통과            → CI 통과
+  #   1 = 회귀(침범) 감지 → CI 실패 (반드시 막는다)
+  #   2 = 베이스라인 없음 → 경고 후 통과 (greenfield: 아직 보호 대상이 확정 전)
+  #
+  # greenfield 처리: 1차 릴리스 확정 후 사용자가 `./harness/baseline.sh`로 최초
+  # 베이스라인을 캡처하면, 이후부터 exit 2 가 사라지고 회귀(exit 1)를 실제로 차단한다.
+  # 즉 이 스텝은 "베이스라인이 있으면 통과 필수, 없으면 경고 후 통과"로 동작한다.
+  # ---------------------------------------------------------------------------
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      # check.sh 는 베이스라인이 있으면 특성화 테스트(manifest test_commands)를 돌린다.
+      # server 테스트 명령이 server/.venv/bin/python 이고 web 은 npm 이므로 미리 준비한다.
+      - name: Prepare backend venv
+        working-directory: server
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt
+      - name: Prepare frontend deps
+        working-directory: web
+        run: npm ci
+      - name: Run regression harness
+        run: |
+          set +e
+          ./harness/check.sh
+          code=$?
+          echo "harness check.sh exit code = $code"
+          if [ "$code" -eq 0 ]; then
+            echo "::notice::하네스 통과 — 기존 화면/기능 보존 확인"
+            exit 0
+          elif [ "$code" -eq 2 ]; then
+            # greenfield: 보호 베이스라인 미존재. 회귀 판정 불가하므로 경고 후 통과.
+            echo "::warning::회귀 보호 베이스라인 없음(exit 2). 1차 릴리스 확정 후 './harness/baseline.sh'로 최초 캡처 필요."
+            exit 0
+          else
+            # exit 1 (또는 기타): 회귀/침범 감지 → 반드시 실패
+            echo "::error::하네스 실패(exit $code) — 기존 기능 침범 가능성. harness/last-report.md 확인."
+            exit 1
+          fi

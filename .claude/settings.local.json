@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import yaml; print\\('pyyaml ok', yaml.__version__\\)\")",
+      "Bash(python3 -m pip install pyyaml --quiet)",
+      "Bash(python3 -)",
+      "Bash(python3 harness/openapi_diff.py api/openapi.yaml api/openapi.yaml)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(python3 -c \"import json;json.load\\(open\\('design/tokens.json'\\)\\);print\\('tokens.json OK'\\)\")",
+      "Bash(./harness/check.sh)",
+      "Bash(awk '/^  schemas:/{f=1;next} f&&/^    [A-Za-z]/{print $0}' api/openapi.yaml)",
+      "Bash(python3 -c \"import json;json.load\\(open\\('design/tokens.json'\\)\\);print\\('valid JSON'\\)\")",
+      "Bash(awk '/^    RecipeDetail:/,/^    RecipeWriteRequest:/' api/openapi.yaml)",
+      "Bash(awk '/^    RecipeWriteRequest:/,/^    RecipeListResponse:/' api/openapi.yaml)",
+      "Bash(python3 -m pip --version)",
+      "Bash(python3 -c \"import fastapi; print\\('fastapi', fastapi.__version__\\)\")",
+      "Bash(python3 -c \"import pytest; print\\('pytest ok'\\)\")"
+    ]
+  }
+}

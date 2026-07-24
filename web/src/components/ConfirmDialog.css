@@ -1,0 +1,62 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--c-overlay);
+  display: grid;
+  place-items: center;
+  padding: var(--s-8) var(--s-4);
+}
+.dialog {
+  background: var(--c-card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  max-width: 420px;
+  width: 100%;
+  padding: var(--s-6);
+}
+.dialog__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-full);
+  background: var(--c-error-bg);
+  color: var(--c-error);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  margin-bottom: var(--s-4);
+}
+.dialog__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: var(--s-3);
+}
+.dialog__desc {
+  color: var(--c-n-700);
+  margin-bottom: var(--s-6);
+}
+.dialog__desc .name {
+  font-weight: 700;
+  color: var(--c-n-900);
+}
+.dialog__banner {
+  margin-bottom: var(--s-4);
+}
+.dialog__actions {
+  display: flex;
+  gap: var(--s-2);
+  justify-content: flex-end;
+}
+
+/* 모바일: bottom-sheet 변형 */
+@media (max-width: 767px) {
+  .dialog-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+  .dialog {
+    max-width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}

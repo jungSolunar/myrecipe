@@ -1,0 +1,18 @@
+{
+  "comment": "회귀 방지 하네스 설정. protected_paths는 체크섬으로 완전 동결. semantic_paths는 추가(additive)만 허용하는 의미 기반 검사.",
+  "protected_paths": [
+    "design/wireframes",
+    "design/components.md",
+    "web/src",
+    "server"
+  ],
+  "semantic_paths": {
+    "openapi": "api/openapi.yaml",
+    "tokens": "design/tokens.json"
+  },
+  "exclude_patterns": ["*.test.*", "*_test.*", "__pycache__", "node_modules", ".pyc"],
+  "test_commands": {
+    "web": "cd web && npm test -- --watchAll=false",
+    "server": "cd server && .venv/bin/python -m pytest -q"
+  }
+}

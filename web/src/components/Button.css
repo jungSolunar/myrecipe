@@ -1,0 +1,71 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--touch);
+  padding: 0 var(--s-4);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.btn--sm {
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  font-size: 13px;
+}
+.btn--block {
+  width: 100%;
+}
+
+.btn--primary {
+  background: var(--c-primary-700);
+  color: #fff;
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--c-primary-800);
+}
+
+.btn--ghost {
+  background: var(--c-n-0);
+  color: var(--c-primary-700);
+  border-color: var(--c-border-strong);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--c-n-50);
+}
+
+.btn--danger {
+  background: var(--c-n-0);
+  color: var(--c-error);
+  border-color: var(--c-error);
+}
+
+.btn--danger-solid {
+  background: var(--c-error);
+  color: #fff;
+}
+.btn--danger-solid:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.btn:disabled {
+  background: var(--c-n-200);
+  color: var(--c-n-500);
+  border-color: transparent;
+  cursor: not-allowed;
+}
+/* loading 중에는 색을 유지 */
+.btn[aria-busy='true'] {
+  background: var(--c-primary-700);
+  color: #fff;
+  opacity: 0.85;
+}
+.btn--danger-solid[aria-busy='true'] {
+  background: var(--c-error);
+}

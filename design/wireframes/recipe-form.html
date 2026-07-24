@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!-- US-004 레시피 등록, US-006 레시피 수정, US-009 레시피-식재료 연결(마스터 선택+수량), US-003 비로그인 게이트 -->
+<!-- 커버: 제목(필수)/카테고리/사진(선택)/조리단계/재료 연결, 등록·수정 모드, 검증오류/저장중/게이트 상태 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>레시피 등록 · 레시피 상자</title>
+<style>
+:root{
+  --c-primary-50:#ECFDF5;--c-primary-100:#D1FAE5;--c-primary-500:#10B981;--c-primary-600:#059669;--c-primary-700:#047857;--c-primary-800:#065F46;
+  --c-n-0:#FFFFFF;--c-n-50:#F9FAFB;--c-n-100:#F3F4F6;--c-n-200:#E5E7EB;--c-n-300:#D1D5DB;--c-n-400:#9CA3AF;--c-n-500:#6B7280;--c-n-600:#4B5563;--c-n-700:#374151;--c-n-800:#1F2937;--c-n-900:#111827;
+  --c-success:#047857;--c-success-bg:#ECFDF5;--c-error:#B91C1C;--c-error-bg:#FEF2F2;--c-warning:#B45309;--c-warning-bg:#FFFBEB;--c-info:#1D4ED8;--c-info-bg:#EFF6FF;
+  --c-page:#F9FAFB;--c-card:#FFFFFF;--c-border:#E5E7EB;--c-border-strong:#D1D5DB;--c-overlay:rgba(17,24,39,.55);--c-focus:#059669;
+  --r-sm:4px;--r-md:8px;--r-lg:16px;--r-full:9999px;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-6:24px;--s-8:32px;--s-12:48px;--s-16:64px;
+  --sh-sm:0 1px 2px rgba(17,24,39,.06);--sh-md:0 2px 8px rgba(17,24,39,.08);--sh-lg:0 8px 24px rgba(17,24,39,.12);
+  --font:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Roboto,sans-serif;
+  --touch:44px;--container:1200px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--c-page);color:var(--c-n-900);line-height:1.6;font-size:16px}
+:focus-visible{outline:2px solid var(--c-focus);outline-offset:2px;border-radius:var(--r-sm)}
+a{color:var(--c-primary-700);text-decoration:none}
+.skip{position:absolute;left:-999px;top:0;background:var(--c-primary-700);color:#fff;padding:var(--s-2) var(--s-4);border-radius:var(--r-md)}
+.skip:focus{left:var(--s-2);z-index:20}
+.header{position:sticky;top:0;z-index:10;background:var(--c-card);border-bottom:1px solid var(--c-border)}
+.header-in{max-width:var(--container);margin:0 auto;padding:var(--s-3) var(--s-4);display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:20px;font-weight:700;color:var(--c-primary-700)}
+.avatar{width:32px;height:32px;border-radius:var(--r-full);background:var(--c-primary-100);color:var(--c-primary-800);display:grid;place-items:center;font-weight:700}
+.container{max-width:720px;margin:0 auto;padding:var(--s-6) var(--s-4) var(--s-16)}
+h1{font-size:24px;font-weight:700;margin-bottom:var(--s-6)}
+.card{background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:var(--s-6);margin-bottom:var(--s-4)}
+.field{margin-bottom:var(--s-4)}
+label{display:block;font-size:14px;font-weight:600;margin-bottom:var(--s-2)}
+.req{color:var(--c-error)}
+.opt{color:var(--c-n-500);font-weight:400}
+input,textarea,select{width:100%;min-height:var(--touch);padding:var(--s-2) var(--s-3);font-size:16px;font-family:inherit;border:1px solid var(--c-border-strong);border-radius:var(--r-md);background:var(--c-n-0);color:var(--c-n-900)}
+textarea{min-height:96px;resize:vertical;line-height:1.6}
+input::placeholder,textarea::placeholder{color:var(--c-n-400)}
+input:focus-visible,textarea:focus-visible,select:focus-visible{border-color:var(--c-primary-600);outline:2px solid var(--c-focus);outline-offset:1px}
+input[aria-invalid="true"]{border-color:var(--c-error)}
+.hint{font-size:12px;color:var(--c-n-600);margin-top:var(--s-1)}
+.err{font-size:12px;color:var(--c-error);margin-top:var(--s-1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s-2);min-height:var(--touch);padding:0 var(--s-4);font-size:15px;font-weight:600;font-family:inherit;border:1px solid transparent;border-radius:var(--r-md);cursor:pointer}
+.btn-primary{background:var(--c-primary-700);color:#fff}.btn-primary:hover{background:var(--c-primary-800)}
+.btn-ghost{background:var(--c-n-0);color:var(--c-primary-700);border:1px solid var(--c-border-strong)}
+.btn-sm{min-height:36px;padding:0 var(--s-3);font-size:13px}
+.uploader{border:1px dashed var(--c-border-strong);border-radius:var(--r-md);padding:var(--s-6);text-align:center;color:var(--c-n-600)}
+/* 재료 연결 (US-009) */
+.ing-row{display:grid;grid-template-columns:1fr 88px 40px;gap:var(--s-2);align-items:center;margin-bottom:var(--s-2)}
+.ing-row .del{min-height:var(--touch);border:1px solid var(--c-border-strong);border-radius:var(--r-md);background:var(--c-n-0);color:var(--c-n-600);cursor:pointer;font-size:16px}
+.picker{position:relative}
+.picker-list{border:1px solid var(--c-border-strong);border-radius:var(--r-md);margin-top:var(--s-1);overflow:hidden}
+.picker-list button{display:flex;justify-content:space-between;width:100%;text-align:left;min-height:var(--touch);padding:var(--s-2) var(--s-3);background:var(--c-n-0);border:none;border-bottom:1px solid var(--c-border);cursor:pointer;font-family:inherit;font-size:14px}
+.picker-list button:hover{background:var(--c-primary-50)}
+.picker-list .new{color:var(--c-primary-700);font-weight:600}
+.steps-list{counter-reset:s;display:flex;flex-direction:column;gap:var(--s-3)}
+.step-item{display:flex;gap:var(--s-2);align-items:flex-start}
+.step-item::before{counter-increment:s;content:counter(s);flex:0 0 auto;width:28px;height:28px;border-radius:var(--r-full);background:var(--c-primary-100);color:var(--c-primary-800);display:grid;place-items:center;font-weight:700;font-size:14px;margin-top:var(--s-1)}
+.actions{display:flex;gap:var(--s-2);justify-content:flex-end;position:sticky;bottom:0;background:var(--c-page);padding:var(--s-4) 0}
+.state-title{font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--c-n-600);margin:var(--s-12) 0 var(--s-3)}
+.note{background:var(--c-info-bg);color:var(--c-info);border:1px solid var(--c-info);border-radius:var(--r-md);padding:var(--s-3);font-size:14px}
+.alert{display:flex;gap:var(--s-2);padding:var(--s-3);border-radius:var(--r-md);font-size:14px;margin-bottom:var(--s-4)}
+.alert-error{background:var(--c-error-bg);color:var(--c-error);border:1px solid var(--c-error)}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:var(--r-full);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(min-width:768px){.container{padding-top:var(--s-8)}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+<header class="header">
+  <div class="header-in"><a class="brand" href="recipe-list.html">🥕 레시피 상자</a><span class="avatar" aria-hidden="true">C</span></div>
+</header>
+
+<main id="main" class="container">
+  <h1>새 레시피 등록</h1>
+  <!-- 수정 모드일 때: <h1>레시피 수정</h1> + 기존 값 프리필 + 저장 버튼 “변경 저장” -->
+
+  <form novalidate>
+    <div class="card">
+      <div class="field">
+        <label for="title">제목 <span class="req" aria-hidden="true">*</span></label>
+        <input id="title" type="text" placeholder="예: 기본 계란말이" required value="기본 계란말이" aria-describedby="title-hint">
+        <p id="title-hint" class="hint">필수 항목입니다.</p>
+      </div>
+      <div class="field">
+        <label for="cat">카테고리</label>
+        <select id="cat"><option>선택 안 함</option><option selected>한식</option><option>양식</option><option>일식</option><option>디저트</option></select>
+      </div>
+      <div class="field">
+        <label for="photo">대표 사진 <span class="opt">(선택)</span></label>
+        <div class="uploader"><p>이미지를 끌어다 놓거나</p><p style="margin-top:var(--s-2)"><button type="button" class="btn btn-ghost btn-sm">파일 선택</button></p><p class="hint" style="margin-top:var(--s-2)">JPG/PNG, 최대 5MB · 없어도 저장됩니다</p></div>
+        <input id="photo" type="file" accept="image/png,image/jpeg" class="skip" tabindex="-1" aria-hidden="true">
+      </div>
+    </div>
+
+    <!-- 재료 연결 (US-009) -->
+    <div class="card">
+      <label id="ing-h">재료 (식재료 마스터에서 선택)</label>
+      <p class="hint" style="margin-bottom:var(--s-3)">마스터에 있는 재료를 검색해 선택하고 수량을 입력하세요.</p>
+      <div class="ing-row"><input type="text" aria-label="재료명" value="계란" list=""><input type="text" aria-label="수량" value="4개"><button type="button" class="del" aria-label="계란 재료 삭제">✕</button></div>
+      <div class="ing-row"><input type="text" aria-label="재료명" value="대파"><input type="text" aria-label="수량" value="1/2대"><button type="button" class="del" aria-label="대파 재료 삭제">✕</button></div>
+
+      <div class="picker">
+        <div class="field" style="margin:var(--s-3) 0 0">
+          <label for="ing-search">재료 추가</label>
+          <input id="ing-search" type="search" placeholder="재료명 검색 (예: 두)" value="두" aria-expanded="true" aria-controls="ing-results">
+        </div>
+        <div id="ing-results" class="picker-list" role="listbox" aria-label="마스터 재료 검색 결과">
+          <button type="button" role="option"><span>두부</span><span class="hint">가공식품 · 모</span></button>
+          <button type="button" role="option"><span>두유</span><span class="hint">음료 · ml</span></button>
+          <button type="button" role="option" class="new"><span>+ “두”(으)로 새 재료 만들기</span><span class="hint">마스터에 등록 후 연결</span></button>
+        </div>
+      </div>
+      <p class="note" style="margin-top:var(--s-3)">마스터에 없는 재료명을 입력하면 “새 재료 만들기”가 제안됩니다(US-009 AC2). 선택 시 식재료 마스터에 신규 등록 후 이 레시피에 연결됩니다.</p>
+    </div>
+
+    <div class="card">
+      <label>조리 단계</label>
+      <div class="steps-list" style="margin-top:var(--s-3)">
+        <div class="step-item"><textarea aria-label="1단계 설명">계란 4개를 볼에 풀고 소금으로 간한다.</textarea></div>
+        <div class="step-item"><textarea aria-label="2단계 설명">대파를 잘게 썰어 계란물에 섞는다.</textarea></div>
+      </div>
+      <p style="margin-top:var(--s-3)"><button type="button" class="btn btn-ghost btn-sm">+ 단계 추가</button></p>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn-ghost" href="recipe-detail.html">취소</a>
+      <button type="submit" class="btn btn-primary">저장</button>
+    </div>
+  </form>
+
+  <!-- ===== 상태 화면 ===== -->
+  <p class="state-title">상태 A — 검증 오류: 제목 누락 (US-004 AC2)</p>
+  <div class="card">
+    <div class="alert alert-error" role="alert">⚠ 저장하려면 아래 항목을 확인하세요.</div>
+    <div class="field"><label for="t2">제목 <span class="req">*</span></label><input id="t2" type="text" value="" aria-invalid="true" aria-describedby="t2-err"><p id="t2-err" class="err" role="alert">제목은 필수입니다.</p></div>
+  </div>
+
+  <p class="state-title">상태 B — 저장 중 (loading)</p>
+  <div class="card"><button class="btn btn-primary" disabled aria-busy="true"><span class="spinner" aria-hidden="true"></span> 저장 중…</button></div>
+
+  <p class="state-title">상태 C — 비로그인 진입 → 로그인 게이트 (US-003)</p>
+  <div class="card"><p class="note">🔒 레시피 등록/수정은 로그인 후 이용할 수 있습니다. 로그인 화면으로 이동하며, 로그인 후 이 작성 화면으로 복귀합니다(returnTo).</p></div>
+
+  <p class="state-title">상태 D — 수정 권한 없음 (US-006 AC2)</p>
+  <div class="card"><p class="note" style="background:var(--c-error-bg);color:var(--c-error);border-color:var(--c-error)">⚠ 본인이 등록한 레시피만 수정할 수 있습니다. (서버에서 403 차단)</p></div>
+</main>
+</body>
+</html>

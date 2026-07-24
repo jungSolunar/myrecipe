@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!-- US-005 레시피 상세, US-006 수정 진입, US-007 삭제 진입, US-003 비로그인 열람/게이트, US-012(Should) 부족재료 확장 여지 -->
+<!-- 커버: 제목/재료/조리단계/사진(있음·없음)/카테고리, 소유자 액션, 비소유자/비로그인 상태, 로딩/에러/404 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기본 계란말이 · 레시피 상자</title>
+<style>
+:root{
+  --c-primary-50:#ECFDF5;--c-primary-100:#D1FAE5;--c-primary-500:#10B981;--c-primary-600:#059669;--c-primary-700:#047857;--c-primary-800:#065F46;
+  --c-n-0:#FFFFFF;--c-n-50:#F9FAFB;--c-n-100:#F3F4F6;--c-n-200:#E5E7EB;--c-n-300:#D1D5DB;--c-n-400:#9CA3AF;--c-n-500:#6B7280;--c-n-600:#4B5563;--c-n-700:#374151;--c-n-800:#1F2937;--c-n-900:#111827;
+  --c-success:#047857;--c-success-bg:#ECFDF5;--c-error:#B91C1C;--c-error-bg:#FEF2F2;--c-warning:#B45309;--c-warning-bg:#FFFBEB;--c-info:#1D4ED8;--c-info-bg:#EFF6FF;
+  --c-page:#F9FAFB;--c-card:#FFFFFF;--c-border:#E5E7EB;--c-border-strong:#D1D5DB;--c-overlay:rgba(17,24,39,.55);--c-focus:#059669;
+  --r-sm:4px;--r-md:8px;--r-lg:16px;--r-full:9999px;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-6:24px;--s-8:32px;--s-12:48px;--s-16:64px;
+  --sh-sm:0 1px 2px rgba(17,24,39,.06);--sh-md:0 2px 8px rgba(17,24,39,.08);--sh-lg:0 8px 24px rgba(17,24,39,.12);
+  --font:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Roboto,sans-serif;
+  --touch:44px;--container:1200px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--c-page);color:var(--c-n-900);line-height:1.6;font-size:16px}
+:focus-visible{outline:2px solid var(--c-focus);outline-offset:2px;border-radius:var(--r-sm)}
+img{max-width:100%;display:block}
+a{color:var(--c-primary-700);text-decoration:none}
+.skip{position:absolute;left:-999px;top:0;background:var(--c-primary-700);color:#fff;padding:var(--s-2) var(--s-4);border-radius:var(--r-md)}
+.skip:focus{left:var(--s-2);z-index:20}
+.header{position:sticky;top:0;z-index:10;background:var(--c-card);border-bottom:1px solid var(--c-border)}
+.header-in{max-width:var(--container);margin:0 auto;padding:var(--s-3) var(--s-4);display:flex;align-items:center;justify-content:space-between;gap:var(--s-3)}
+.brand{font-size:20px;font-weight:700;color:var(--c-primary-700)}
+.avatar{width:32px;height:32px;border-radius:var(--r-full);background:var(--c-primary-100);color:var(--c-primary-800);display:grid;place-items:center;font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s-2);min-height:var(--touch);padding:0 var(--s-4);font-size:15px;font-weight:600;font-family:inherit;border:1px solid transparent;border-radius:var(--r-md);cursor:pointer;white-space:nowrap}
+.btn-primary{background:var(--c-primary-700);color:#fff}.btn-primary:hover{background:var(--c-primary-800)}
+.btn-ghost{background:var(--c-n-0);color:var(--c-primary-700);border:1px solid var(--c-border-strong)}
+.btn-danger{background:var(--c-n-0);color:var(--c-error);border:1px solid var(--c-error)}
+.container{max-width:840px;margin:0 auto;padding:var(--s-6) var(--s-4) var(--s-16)}
+.crumb{font-size:13px;color:var(--c-n-600);margin-bottom:var(--s-4)}
+.hero{aspect-ratio:16/9;background:var(--c-n-100);border-radius:var(--r-lg);display:grid;place-items:center;color:var(--c-n-400);margin-bottom:var(--s-4)}
+h1{font-size:32px;font-weight:700;line-height:1.3;margin-bottom:var(--s-3)}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s-2);margin-bottom:var(--s-4)}
+.tag{background:var(--c-n-100);color:var(--c-n-700);border-radius:var(--r-full);padding:var(--s-1) var(--s-3);font-size:13px;font-weight:600}
+.owner-actions{display:flex;gap:var(--s-2);margin-bottom:var(--s-6);flex-wrap:wrap}
+section{background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:var(--s-6);margin-bottom:var(--s-4)}
+h2{font-size:20px;font-weight:600;margin-bottom:var(--s-4)}
+.ing{list-style:none;display:flex;flex-direction:column;gap:var(--s-2)}
+.ing li{display:flex;justify-content:space-between;padding:var(--s-2) 0;border-bottom:1px solid var(--c-border)}
+.ing .name{font-weight:600}
+.ing .qty{color:var(--c-n-600)}
+.steps{list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:var(--s-4)}
+.steps li{display:flex;gap:var(--s-3)}
+.steps li::before{counter-increment:step;content:counter(step);flex:0 0 auto;width:28px;height:28px;border-radius:var(--r-full);background:var(--c-primary-700);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.badge{display:inline-flex;align-items:center;gap:var(--s-1);padding:2px var(--s-2);border-radius:var(--r-full);font-size:12px;font-weight:700}
+.badge-short{background:var(--c-warning-bg);color:var(--c-warning);border:1px solid var(--c-warning)}
+.badge-ok{background:var(--c-success-bg);color:var(--c-success);border:1px solid var(--c-success)}
+.state-title{font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--c-n-600);margin:var(--s-12) 0 var(--s-3)}
+.note{background:var(--c-info-bg);color:var(--c-info);border:1px solid var(--c-info);border-radius:var(--r-md);padding:var(--s-3);font-size:14px}
+.state-box{background:var(--c-card);border:1px dashed var(--c-border-strong);border-radius:var(--r-lg);padding:var(--s-12) var(--s-4);text-align:center;color:var(--c-n-600)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+<header class="header">
+  <div class="header-in">
+    <a class="brand" href="recipe-list.html">🥕 레시피 상자</a>
+    <span style="display:flex;align-items:center;gap:var(--s-2)"><span class="avatar" aria-hidden="true">C</span></span>
+  </div>
+</header>
+
+<main id="main" class="container">
+  <p class="crumb"><a href="recipe-list.html">레시피</a> › 기본 계란말이</p>
+
+  <!-- 사진 있음 예시 (없으면 아래 상태 D 참고) -->
+  <div class="hero"><img src="" alt="완성된 계란말이를 접시에 담은 사진" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🍳 사진 없음'}))"></div>
+
+  <h1>기본 계란말이</h1>
+  <div class="meta"><span class="tag">한식</span><span class="tag">15분</span><span class="tag">재료 4개</span></div>
+
+  <!-- 소유자 액션 (US-006 수정, US-007 삭제 진입) -->
+  <div class="owner-actions">
+    <a class="btn btn-ghost" href="recipe-form.html">✏ 수정</a>
+    <a class="btn btn-danger" href="recipe-delete-confirm.html">🗑 삭제</a>
+  </div>
+
+  <section aria-labelledby="ing-h">
+    <h2 id="ing-h">재료</h2>
+    <ul class="ing">
+      <li><span class="name">계란</span><span class="qty">4개</span></li>
+      <li><span class="name">대파</span><span class="qty">1/2대</span></li>
+      <li><span class="name">소금</span><span class="qty">약간</span></li>
+      <li><span class="name">식용유</span><span class="qty">1큰술</span></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="step-h">
+    <h2 id="step-h">조리 단계</h2>
+    <ol class="steps">
+      <li>계란 4개를 볼에 풀고 소금으로 간한다.</li>
+      <li>대파를 잘게 썰어 계란물에 섞는다.</li>
+      <li>달군 팬에 기름을 두르고 계란물을 얇게 부어 익으면 돌돌 만다.</li>
+      <li>한 김 식힌 뒤 먹기 좋게 썬다.</li>
+    </ol>
+  </section>
+
+  <!-- ===== 상태 화면 ===== -->
+  <p class="state-title">상태 A — 비로그인/비소유자 (US-003, US-006·007 AC2)</p>
+  <section aria-label="비소유자 상태 예시">
+    <p class="note">🔒 이 레시피는 열람만 가능합니다. 수정·삭제는 작성자 본인만 할 수 있어요. (비로그인은 <a href="login.html" style="text-decoration:underline">로그인</a> 후 본인 레시피에서 가능)</p>
+    <p style="margin-top:var(--s-3);color:var(--c-n-600);font-size:14px">→ 소유자 액션 버튼(수정/삭제)은 숨김 처리됨.</p>
+  </section>
+
+  <p class="state-title">상태 B — [확장/Should US-012] 재고 대조 (로그인 회원)</p>
+  <section aria-label="부족 재료 표시 확장 예시">
+    <ul class="ing">
+      <li><span class="name">계란</span><span><span class="badge badge-ok">✓ 보유</span> <span class="qty">4개</span></span></li>
+      <li><span class="name">대파</span><span><span class="badge badge-short">부족</span> <span class="qty">필요 1/2대</span></span></li>
+    </ul>
+    <p class="note" style="margin-top:var(--s-4)">이 재고 대조 표시는 Should 범위(US-012)로, 재고 데이터가 있는 로그인 회원에게만 노출. 비로그인에는 “로그인 시 부족 재료를 확인할 수 있어요” 안내로 대체. <strong>이번 Must 산출물에서는 자리(placeholder)만 정의.</strong></p>
+  </section>
+
+  <p class="state-title">상태 C — 로딩 (skeleton)</p>
+  <div class="state-box" aria-hidden="true">본문 로딩 중… (제목/재료/단계 스켈레톤)</div>
+
+  <p class="state-title">상태 D — 사진 없음 (US-004 AC3)</p>
+  <div class="state-box">사진이 없는 레시피는 위 hero 영역에 “🍳 사진 없음” 플레이스홀더 표시. 사진은 선택 항목.</div>
+
+  <p class="state-title">상태 E — 404 / 삭제됨</p>
+  <div class="state-box"><h2 style="color:var(--c-n-800)">레시피를 찾을 수 없어요</h2><p>이미 삭제되었거나 잘못된 주소일 수 있습니다.</p><p style="margin-top:var(--s-4)"><a class="btn btn-primary" href="recipe-list.html">목록으로</a></p></div>
+
+  <p class="state-title">상태 F — 로드 실패 (에러)</p>
+  <div class="state-box" style="border-color:var(--c-error);color:var(--c-error)"><p>레시피를 불러오지 못했어요. <button class="btn btn-ghost" style="border-color:var(--c-error);color:var(--c-error)">다시 시도</button></p></div>
+</main>
+</body>
+</html>

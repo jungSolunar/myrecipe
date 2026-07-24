@@ -1,0 +1,16 @@
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #fff;
+  border-radius: var(--r-full);
+  animation: spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+/* 밝은 배경 위 스피너(ghost/danger 버튼) */
+.btn--ghost .spinner,
+.btn--danger .spinner {
+  border-color: var(--c-n-300);
+  border-top-color: var(--c-primary-700);
+}
