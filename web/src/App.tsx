@@ -7,6 +7,7 @@ import { RecipeListPage } from './features/recipes/RecipeListPage';
 import { RecipeDetailPage } from './features/recipes/RecipeDetailPage';
 import { RecipeFormPage } from './features/recipes/RecipeFormPage';
 import { IngredientMasterPage } from './features/ingredients/IngredientMasterPage';
+import { InventoryPage } from './features/inventory/InventoryPage';
 
 export function App() {
   return (
@@ -26,6 +27,7 @@ export function App() {
           <Route path="/recipes/new" element={<RecipeFormPage mode="create" />} />
           <Route path="/recipes/:recipeId/edit" element={<RecipeFormPage mode="edit" />} />
           <Route path="/ingredients" element={<IngredientMasterPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

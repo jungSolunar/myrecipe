@@ -27,6 +27,9 @@ export function Header({ authState, email, loggingOut, onLogout }: HeaderProps) 
             <Link className="user-menu__nav" to="/ingredients">
               식재료 마스터
             </Link>
+            <Link className="user-menu__nav" to="/inventory">
+              내 재고
+            </Link>
             <span className="user-menu__avatar" aria-hidden="true">
               {initialFromEmail(email)}
             </span>

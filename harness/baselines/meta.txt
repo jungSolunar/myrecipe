@@ -1,0 +1,3 @@
+captured_at: 2026-07-25T00:07:47+09:00
+reason: initial
+git_ref: 2dcb25a90b05c00ed1fa0cc8e10a9139904215d5

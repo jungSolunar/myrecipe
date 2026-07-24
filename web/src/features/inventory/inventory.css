@@ -1,0 +1,205 @@
+/* features/inventory/inventory.css — US-011 재고 관리 화면 스타일. tokens.css 변수만 사용. */
+.inv-page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-4) var(--s-16);
+}
+.inv-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: var(--s-2);
+}
+.inv-sub {
+  color: var(--c-n-600);
+  font-size: 14px;
+  margin-bottom: var(--s-6);
+}
+.inv-card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  margin-bottom: var(--s-6);
+}
+.inv-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: var(--s-3);
+}
+.inv-add__alert {
+  margin-bottom: var(--s-3);
+}
+
+.inv-add-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-3);
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .inv-add-grid {
+    grid-template-columns: 2.2fr 1fr 0.8fr 1.4fr auto;
+    align-items: end;
+  }
+}
+.inv-add__submit {
+  min-height: var(--touch);
+}
+
+.inv-searchbar {
+  margin-bottom: var(--s-3);
+}
+
+.inv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  font-size: 13px;
+  color: var(--c-n-600);
+  margin-bottom: var(--s-4);
+}
+
+/* ----- 테이블 ----- */
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.inv-table caption {
+  text-align: left;
+  font-size: 13px;
+  color: var(--c-n-600);
+  padding-bottom: var(--s-2);
+}
+.inv-table th,
+.inv-table td {
+  text-align: left;
+  padding: var(--s-3);
+  border-bottom: 1px solid var(--c-border);
+  vertical-align: middle;
+}
+.inv-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--c-n-600);
+  background: var(--c-n-50);
+}
+.inv-name {
+  font-weight: 600;
+}
+.inv-pill {
+  display: inline-block;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-full);
+  background: var(--c-n-100);
+  color: var(--c-n-700);
+  font-size: 12px;
+}
+.inv-qty {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.inv-qty-edit {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.inv-qty-edit__unit {
+  color: var(--c-n-600);
+  font-size: 13px;
+}
+.inv-row-actions {
+  display: flex;
+  gap: var(--s-2);
+  justify-content: flex-end;
+}
+.inv-exp-empty {
+  color: var(--c-n-500);
+}
+
+/* ----- 유통기한 배지 ----- */
+.expiry-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 2px var(--s-2);
+  border-radius: var(--r-full);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.expiry-badge--ok {
+  background: var(--c-success-bg);
+  color: var(--c-success);
+  border-color: var(--c-primary-200);
+}
+.expiry-badge--soon {
+  background: var(--c-warning-bg);
+  color: var(--c-warning);
+  border-color: var(--c-warning);
+}
+.expiry-badge--expired {
+  background: var(--c-error-bg);
+  color: var(--c-error);
+  border-color: var(--c-error);
+}
+
+/* ----- 로딩 스켈레톤 ----- */
+.inv-skel-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.inv-skel {
+  background: var(--c-n-100);
+  border-radius: var(--r-sm);
+  height: 14px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.inv-skel--row {
+  height: 44px;
+  width: 100%;
+}
+
+.inv-footnote {
+  color: var(--c-n-600);
+  font-size: 13px;
+}
+
+/* ----- 모바일 카드형 테이블 (<768px) ----- */
+@media (max-width: 767px) {
+  .inv-table,
+  .inv-table thead,
+  .inv-table tbody,
+  .inv-table tr,
+  .inv-table th,
+  .inv-table td {
+    display: block;
+  }
+  .inv-table thead {
+    position: absolute;
+    left: -999px;
+  }
+  .inv-table tr {
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    margin-bottom: var(--s-3);
+    padding: var(--s-3);
+  }
+  .inv-table td {
+    border: none;
+    padding: var(--s-1) 0;
+  }
+  .inv-table td::before {
+    content: attr(data-th);
+    display: block;
+    font-size: 12px;
+    color: var(--c-n-600);
+    font-weight: 600;
+  }
+  .inv-row-actions {
+    justify-content: flex-start;
+    margin-top: var(--s-2);
+  }
+}

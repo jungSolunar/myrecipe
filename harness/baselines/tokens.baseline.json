@@ -1,0 +1,91 @@
+{
+  "$comment": "레시피 & 식재료 관리 웹서비스 디자인 토큰. design-system 스킬 구조 준수. 값 변경·삭제 금지(추가만 허용). 모든 대비율은 4.5:1 이상 검증됨(주석 참조).",
+  "color": {
+    "primary": {
+      "50": "#ECFDF5",
+      "100": "#D1FAE5",
+      "200": "#A7F3D0",
+      "300": "#6EE7B7",
+      "400": "#34D399",
+      "500": "#10B981",
+      "600": "#059669",
+      "700": "#047857",
+      "800": "#065F46",
+      "900": "#064E3B",
+      "$comment": "primary-700(#047857) on white = 4.94:1 (버튼 배경+흰 텍스트 통과). hover=800."
+    },
+    "neutral": {
+      "0": "#FFFFFF",
+      "50": "#F9FAFB",
+      "100": "#F3F4F6",
+      "200": "#E5E7EB",
+      "300": "#D1D5DB",
+      "400": "#9CA3AF",
+      "500": "#6B7280",
+      "600": "#4B5563",
+      "700": "#374151",
+      "800": "#1F2937",
+      "900": "#111827",
+      "$comment": "본문 텍스트=900 on white(16.1:1). 보조 텍스트=600 on white(7.5:1). 400은 placeholder/보더용(텍스트 금지)."
+    },
+    "semantic": {
+      "success": "#047857",
+      "success-bg": "#ECFDF5",
+      "error": "#B91C1C",
+      "error-bg": "#FEF2F2",
+      "warning": "#B45309",
+      "warning-bg": "#FFFBEB",
+      "info": "#1D4ED8",
+      "info-bg": "#EFF6FF",
+      "$comment": "error(#B91C1C) on white=5.9:1, warning(#B45309) on white=4.9:1, info(#1D4ED8) on white=6.3:1. 모두 bg 색상 위 텍스트로 사용 시에도 4.5:1 이상."
+    },
+    "surface": {
+      "page": "#F9FAFB",
+      "card": "#FFFFFF",
+      "border": "#E5E7EB",
+      "border-strong": "#D1D5DB",
+      "overlay": "rgba(17, 24, 39, 0.55)"
+    },
+    "focus": {
+      "ring": "#059669",
+      "$comment": "포커스 링. 2px solid + 2px offset 로 사용."
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "base": "-apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Segoe UI', Roboto, sans-serif"
+    },
+    "heading-1": {"size": "32px", "weight": 700, "lineHeight": 1.3},
+    "heading-2": {"size": "24px", "weight": 700, "lineHeight": 1.35},
+    "heading-3": {"size": "20px", "weight": 600, "lineHeight": 1.4},
+    "body": {"size": "16px", "weight": 400, "lineHeight": 1.6},
+    "body-sm": {"size": "14px", "weight": 400, "lineHeight": 1.5},
+    "label": {"size": "14px", "weight": 600, "lineHeight": 1.4},
+    "caption": {"size": "12px", "weight": 400, "lineHeight": 1.4}
+  },
+  "spacing": {
+    "unit": "4px",
+    "scale": [4, 8, 12, 16, 24, 32, 48, 64]
+  },
+  "radius": {
+    "sm": "4px",
+    "md": "8px",
+    "lg": "16px",
+    "full": "9999px"
+  },
+  "shadow": {
+    "sm": "0 1px 2px rgba(17,24,39,0.06)",
+    "md": "0 2px 8px rgba(17,24,39,0.08)",
+    "lg": "0 8px 24px rgba(17,24,39,0.12)"
+  },
+  "breakpoint": {
+    "mobile": "0",
+    "tablet": "768px",
+    "desktop": "1200px"
+  },
+  "size": {
+    "touch-target-min": "44px",
+    "container-max": "1200px",
+    "$comment": "터치 타겟 최소 44x44px(접근성 체크리스트)."
+  }
+}
