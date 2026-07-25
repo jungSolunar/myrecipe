@@ -1,14 +1,16 @@
 import type { ReactNode } from 'react';
 import { cx } from '../lib/cx';
+import { Icon } from './Icon';
+import type { IconName } from './Icon';
 import './Alert.css';
 
 type AlertVariant = 'error' | 'warning' | 'success' | 'info';
 
-const ICON: Record<AlertVariant, string> = {
-  error: '⚠',
-  warning: '⚠',
-  success: '✓',
-  info: '🔒',
+const ICON: Record<AlertVariant, IconName> = {
+  error: 'warning',
+  warning: 'warning',
+  success: 'check',
+  info: 'info',
 };
 
 export interface AlertProps {
@@ -26,7 +28,7 @@ export function Alert({ variant, children, role, icon, className }: AlertProps) 
   return (
     <div className={cx('alert', `alert--${variant}`, className)} role={resolvedRole}>
       <span className="alert__icon" aria-hidden="true">
-        {icon ?? ICON[variant]}
+        {icon ?? <Icon name={ICON[variant]} size={16} />}
       </span>
       <div className="alert__body">{children}</div>
     </div>

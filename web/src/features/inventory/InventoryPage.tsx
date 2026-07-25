@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError } from '../../api';
 import type { InventoryItem, InventoryWriteRequest } from '../../api/inventory';
-import { Alert, ConfirmDialog, EmptyState, ErrorState, TextField, Toast } from '../../components';
+import { Alert, ConfirmDialog, EmptyState, ErrorState, Icon, TextField, Toast } from '../../components';
 import { InventoryAddForm } from './InventoryAddForm';
 import { InventoryTable } from './InventoryTable';
 import type { InventoryRowData } from './InventoryTable';
@@ -174,13 +174,13 @@ export function InventoryPage() {
           />
         ) : isEmpty ? (
           <EmptyState
-            icon="🧺"
+            icon={<Icon name="box" size={32} />}
             title="아직 등록한 재고가 없어요"
             description="위 ‘재고 추가’에서 집에 있는 재료를 등록해 보세요. 등록하면 레시피 상세에서 부족 재료를 알려드려요."
           />
         ) : rows.length === 0 ? (
           <EmptyState
-            icon="🔎"
+            icon={<Icon name="search" size={32} />}
             title={`“${query}”와 일치하는 재고가 없어요`}
             description="다른 재료명으로 검색해 보세요."
           />

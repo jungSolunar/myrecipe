@@ -34,7 +34,7 @@
   }
 }
 .add-grid__submit {
-  min-height: var(--touch);
+  min-height: var(--control-h-form);
 }
 .ing-table {
   width: 100%;

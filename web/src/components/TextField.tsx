@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { cx } from '../lib/cx';
+import { Icon } from './Icon';
 import './fields.css';
 
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> {
@@ -58,7 +59,7 @@ export function TextField({
       )}
       {error && (
         <p id={errId} className="field__error" role="alert">
-          <span aria-hidden="true">⚠</span> {error}
+          <Icon name="warning" size={14} /> {error}
         </p>
       )}
     </div>

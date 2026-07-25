@@ -5,6 +5,7 @@ import {
   EmptyState,
   ErrorState,
   GuestBanner,
+  Icon,
   RecipeCard,
   RecipeCardSkeleton,
   Toast,
@@ -139,7 +140,7 @@ export function RecipeListPage() {
       ) : items.length === 0 ? (
         recommendActive ? (
           <EmptyState
-            icon="🥕"
+            icon={<Icon name="carrot" size={32} />}
             title="보유 재료로 만들 수 있는 레시피가 아직 없어요"
             description="재고를 더 등록하거나, 필터를 꺼서 전체 레시피를 보세요."
             actions={
@@ -155,7 +156,7 @@ export function RecipeListPage() {
           />
         ) : hasFilters ? (
           <EmptyState
-            icon="🔍"
+            icon={<Icon name="search" size={32} />}
             title={`“${activeFilterLabel}”와 일치하는 레시피가 없어요`}
             description="검색어를 바꾸거나 필터를 초기화해 보세요."
             actions={
@@ -166,7 +167,7 @@ export function RecipeListPage() {
           />
         ) : (
           <EmptyState
-            icon="🍳"
+            icon={<Icon name="cooking" size={32} />}
             title="아직 등록한 레시피가 없어요"
             description="첫 레시피를 등록해 보관을 시작하세요."
             actions={
@@ -184,7 +185,7 @@ export function RecipeListPage() {
             </Alert>
           )}
           {noneSufficient && (
-            <Alert variant="info" className="rec-notice" icon="💡">
+            <Alert variant="info" className="rec-notice" icon={<Icon name="bulb" size={16} />}>
               딱 맞는 레시피는 없지만, 재료 1~2개만 더 있으면 만들 수 있어요.
             </Alert>
           )}

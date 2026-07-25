@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { uploadsApi } from '../../api';
-import { Button } from '../../components';
+import { Button, Icon } from '../../components';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB (G2 확정)
 const ACCEPT = ['image/png', 'image/jpeg'];
@@ -79,7 +79,7 @@ export function PhotoUploader({ value, onChange }: PhotoUploaderProps) {
       />
       {error && (
         <p className="field__error" role="alert" style={{ justifyContent: 'center' }}>
-          <span aria-hidden="true">⚠</span> {error}
+          <Icon name="warning" size={14} /> {error}
         </p>
       )}
     </div>

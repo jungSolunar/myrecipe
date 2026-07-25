@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Button, Select } from '../../components';
+import { Button, Icon, Select } from '../../components';
 import type { Ingredient } from '../../api/types';
 import { RECIPE_CATEGORY_OPTIONS } from '../ingredients/constants';
 import { RecommendFilterToggle } from './RecommendFilterToggle';
@@ -110,7 +110,7 @@ export function SearchFilterBar({
                 aria-label="검색어 제거"
                 onClick={() => onChange({ ...filters, q: '' })}
               >
-                ✕
+                <Icon name="close" size={14} />
               </button>
             </span>
           )}
@@ -122,7 +122,7 @@ export function SearchFilterBar({
                 aria-label={`${filters.category} 필터 제거`}
                 onClick={() => onChange({ ...filters, category: '' })}
               >
-                ✕
+                <Icon name="close" size={14} />
               </button>
             </span>
           )}
@@ -134,7 +134,7 @@ export function SearchFilterBar({
                 aria-label={`${selectedIngredient.name} 필터 제거`}
                 onClick={() => onChange({ ...filters, ingredientId: '' })}
               >
-                ✕
+                <Icon name="close" size={14} />
               </button>
             </span>
           )}

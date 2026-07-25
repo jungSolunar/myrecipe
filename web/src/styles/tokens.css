@@ -190,11 +190,24 @@
 
   /* typography / layout */
   --font: var(--font-sans);
-  --touch: 44px;
+  --touch: 44px; /* 접근성 최소 터치 타깃(모바일) */
   --container: 1400px;
+
+  /* 컨트롤 밀도 (design-guide §3/§4): 데스크톱은 툴바 32 / 폼 36,
+   * 모바일(≤900px)에서는 44px 터치 타깃 확보(아래 미디어쿼리). */
+  --control-h-toolbar: 32px;
+  --control-h-form: 36px;
 
   --bp-tablet: 768px;
   --bp-desktop: 1200px;
+}
+
+/* 모바일(≤900px): 컨트롤을 44px 터치 타깃으로 승격 */
+@media (max-width: 900px) {
+  :root {
+    --control-h-toolbar: 44px;
+    --control-h-form: 44px;
+  }
 }
 
 [data-theme='dark'] {

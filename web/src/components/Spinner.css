@@ -3,7 +3,8 @@
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.5);
-  border-top-color: #fff;
+  /* 버튼 텍스트 색(primary-fg / danger 위 흰색)을 따라가 다크에서도 대비 유지 */
+  border-top-color: currentColor;
   border-radius: var(--r-full);
   animation: spin 0.7s linear infinite;
   flex: 0 0 auto;

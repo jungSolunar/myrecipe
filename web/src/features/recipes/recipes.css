@@ -74,6 +74,9 @@
   border-radius: var(--r-full);
 }
 .chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: inherit;
@@ -92,7 +95,7 @@
   font-size: 12px;
   cursor: pointer;
   padding: var(--s-1) var(--s-2);
-  min-height: var(--touch);
+  min-height: var(--control-h-toolbar);
 }
 .search-filter__count {
   font-size: 13px;
@@ -117,7 +120,55 @@
   }
 }
 
-/* ===== 상세 ===== */
+/* ===== 상세 (§3.3 2열 sticky) ===== */
+.recipe-detail {
+  max-width: 1120px;
+}
+.recipe-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--s-6);
+  align-items: start;
+}
+.recipe-detail__main {
+  min-width: 0;
+}
+.recipe-detail__side {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+/* 좁은 화면: 자연 스택 + sticky 해제 */
+@media (max-width: 900px) {
+  .recipe-detail__side {
+    position: static;
+    top: auto;
+  }
+}
+/* 그리드 안에서는 카드 간격을 side/main gap 이 담당 */
+.recipe-detail__grid .recipe-section {
+  margin-bottom: 0;
+}
+.recipe-detail__main > .recipe-section + .recipe-section {
+  margin-top: var(--s-4);
+}
+.recipe-side-card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: var(--s-4);
+}
+.recipe-detail__side .owner-actions {
+  margin-bottom: 0;
+}
+.recipe-hero__empty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
 .recipe-crumb {
   font-size: 13px;
   color: var(--c-n-600);
@@ -213,7 +264,7 @@
   height: 28px;
   border-radius: var(--r-full);
   background: var(--c-primary-700);
-  color: #fff;
+  color: var(--primary-fg);
   display: grid;
   place-items: center;
   font-weight: 700;
@@ -261,7 +312,10 @@
   margin-bottom: 0;
 }
 .ing-row__del {
-  min-height: var(--touch);
+  display: grid;
+  place-items: center;
+  min-height: var(--control-h-form);
+  min-width: var(--control-h-form);
   border: 1px solid var(--c-border-strong);
   border-radius: var(--r-md);
   background: var(--c-n-0);
@@ -285,7 +339,7 @@
   gap: var(--s-2);
   width: 100%;
   text-align: left;
-  min-height: var(--touch);
+  min-height: var(--control-h-form);
   padding: var(--s-2) var(--s-3);
   background: var(--c-n-0);
   border: none;
@@ -350,8 +404,10 @@
   margin-bottom: 0;
 }
 .step-edit-row__del {
-  min-height: var(--touch);
-  min-width: var(--touch);
+  display: grid;
+  place-items: center;
+  min-height: var(--control-h-form);
+  min-width: var(--control-h-form);
   border: 1px solid var(--c-border-strong);
   border-radius: var(--r-md);
   background: var(--c-n-0);

@@ -8,6 +8,7 @@ import {
   ConfirmDialog,
   EmptyState,
   ErrorState,
+  Icon,
   Select,
   TextField,
   Toast,
@@ -188,7 +189,7 @@ export function IngredientMasterPage() {
           />
         ) : isEmpty ? (
           <EmptyState
-            icon="🧺"
+            icon={<Icon name="box" size={32} />}
             title={query ? `“${query}”와 일치하는 재료가 없어요` : '아직 등록한 식재료가 없어요'}
             description="위 ‘새 식재료 추가’로 자주 쓰는 재료부터 등록해 보세요."
           />

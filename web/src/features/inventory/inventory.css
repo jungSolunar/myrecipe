@@ -44,7 +44,7 @@
   }
 }
 .inv-add__submit {
-  min-height: var(--touch);
+  min-height: var(--control-h-form);
 }
 
 .inv-searchbar {

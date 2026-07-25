@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../../api';
 import type { RecipeIngredient } from '../../api/types';
-import { Alert, Badge, ConfirmDialog, ErrorState, Toast } from '../../components';
+import { Alert, Badge, ConfirmDialog, ErrorState, Icon, Toast } from '../../components';
 import { useAuth } from '../auth/useAuth';
 import { useDeleteRecipe, useRecipeDetail } from './useRecipes';
 import './recipes.css';
@@ -85,89 +85,98 @@ export function RecipeDetailPage() {
   };
 
   return (
-    <main id="main" className="recipes-container recipes-container--narrow">
+    <main id="main" className="recipes-container recipe-detail">
       <p className="recipe-crumb">
         <Link to="/">레시피</Link> › {recipe.title}
       </p>
 
-      <div className="recipe-hero">
-        {showHeroImage ? (
-          <img
-            src={recipe.photo_url ?? ''}
-            alt={`${recipe.title} 완성 사진`}
-            onError={() => setHeroFailed(true)}
-          />
-        ) : (
-          <span aria-hidden="true">사진 없음</span>
-        )}
-      </div>
+      {/* §3.3 상세형: 좌 미디어+제목+조리 순서 / 우 sticky 요약·액션 패널 */}
+      <div className="recipe-detail__grid">
+        <div className="recipe-detail__main">
+          <div className="recipe-hero">
+            {showHeroImage ? (
+              <img
+                src={recipe.photo_url ?? ''}
+                alt={`${recipe.title} 완성 사진`}
+                onError={() => setHeroFailed(true)}
+              />
+            ) : (
+              <span className="recipe-hero__empty" aria-hidden="true">
+                <Icon name="image" size={32} /> 사진 없음
+              </span>
+            )}
+          </div>
 
-      <h1 className="recipe-detail__title">{recipe.title}</h1>
-      <div className="recipe-detail__meta">
-        {recipe.category ? <Badge>{recipe.category}</Badge> : null}
-        <Badge>재료 {recipe.ingredients.length}개</Badge>
-      </div>
+          <h1 className="recipe-detail__title">{recipe.title}</h1>
+          <div className="recipe-detail__meta">
+            {recipe.category ? <Badge>{recipe.category}</Badge> : null}
+            <Badge>재료 {recipe.ingredients.length}개</Badge>
+          </div>
 
-      {isOwner && (
-        <div className="owner-actions">
-          <Link className="btn btn--ghost" to={`/recipes/${recipe.id}/edit`}>
-            수정
-          </Link>
-          <button
-            type="button"
-            className="btn btn--danger"
-            onClick={() => {
-              setDeleteError(null);
-              setConfirmOpen(true);
-            }}
-          >
-            삭제
-          </button>
+          {recipe.description ? <p className="recipe-desc">{recipe.description}</p> : null}
+
+          <section className="recipe-section" aria-labelledby="step-h">
+            <h2 id="step-h">조리 단계</h2>
+            {recipe.steps.length === 0 ? (
+              <p style={{ color: 'var(--c-n-600)' }}>등록된 조리 단계가 없어요.</p>
+            ) : (
+              <ol className="steps">
+                {recipe.steps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            )}
+          </section>
         </div>
-      )}
 
-      {recipe.description ? <p className="recipe-desc">{recipe.description}</p> : null}
+        <aside className="recipe-detail__side">
+          {isOwner && (
+            <div className="recipe-side-card owner-actions">
+              <Link className="btn btn--ghost" to={`/recipes/${recipe.id}/edit`}>
+                수정
+              </Link>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={() => {
+                  setDeleteError(null);
+                  setConfirmOpen(true);
+                }}
+              >
+                삭제
+              </button>
+            </div>
+          )}
 
-      <section className="recipe-section" aria-labelledby="ing-h">
-        <h2 id="ing-h">재료</h2>
-        {recipe.ingredients.length === 0 ? (
-          <p style={{ color: 'var(--c-n-600)' }}>등록된 재료가 없어요.</p>
-        ) : (
-          <ul className="ing-list">
-            {recipe.ingredients.map((ing) => (
-              <li key={ing.ingredient_id}>
-                <span className="name">{ing.name ?? ing.ingredient_id}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-2)' }}>
-                  {statusBadge(ing.status)}
-                  <span className="qty">
-                    {ing.quantity}
-                    {ing.unit ?? ''}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {/* US-012(Should) placeholder: 재고 대조는 확장 범위 */}
-        {authStatus === 'guest' && (
-          <p className="note" style={{ marginTop: 'var(--s-4)' }}>
-            로그인하면 내 재고 대비 부족한 재료를 확인할 수 있어요. (확장 예정)
-          </p>
-        )}
-      </section>
-
-      <section className="recipe-section" aria-labelledby="step-h">
-        <h2 id="step-h">조리 단계</h2>
-        {recipe.steps.length === 0 ? (
-          <p style={{ color: 'var(--c-n-600)' }}>등록된 조리 단계가 없어요.</p>
-        ) : (
-          <ol className="steps">
-            {recipe.steps.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-        )}
-      </section>
+          <section className="recipe-section" aria-labelledby="ing-h">
+            <h2 id="ing-h">재료</h2>
+            {recipe.ingredients.length === 0 ? (
+              <p style={{ color: 'var(--c-n-600)' }}>등록된 재료가 없어요.</p>
+            ) : (
+              <ul className="ing-list">
+                {recipe.ingredients.map((ing) => (
+                  <li key={ing.ingredient_id}>
+                    <span className="name">{ing.name ?? ing.ingredient_id}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-2)' }}>
+                      {statusBadge(ing.status)}
+                      <span className="qty">
+                        {ing.quantity}
+                        {ing.unit ?? ''}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {/* US-012(Should) placeholder: 재고 대조는 확장 범위 */}
+            {authStatus === 'guest' && (
+              <p className="note" style={{ marginTop: 'var(--s-4)' }}>
+                로그인하면 내 재고 대비 부족한 재료를 확인할 수 있어요. (확장 예정)
+              </p>
+            )}
+          </section>
+        </aside>
+      </div>
 
       <ConfirmDialog
         open={confirmOpen}

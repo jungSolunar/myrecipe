@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ApiError } from '../../api';
-import { TextField } from '../../components';
+import { Icon, TextField } from '../../components';
 import { useCreateIngredient, useIngredientList } from '../ingredients/useIngredients';
 
 /** 레시피 폼에서 다루는 연결 재료 (계약 RecipeWriteIngredient + 표시용 name). */
@@ -97,7 +97,7 @@ export function IngredientPicker({ value, onChange }: IngredientPickerProps) {
                 aria-label={`${row.name} 재료 삭제`}
                 onClick={() => removeRow(i)}
               >
-                ✕
+                <Icon name="close" size={16} />
               </button>
             </div>
           ))}
@@ -154,7 +154,7 @@ export function IngredientPicker({ value, onChange }: IngredientPickerProps) {
       </div>
       {createError && (
         <p className="field__error" role="alert" style={{ marginTop: 'var(--s-2)' }}>
-          <span aria-hidden="true">⚠</span> {createError}
+          <Icon name="warning" size={14} /> {createError}
         </p>
       )}
     </div>

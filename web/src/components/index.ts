@@ -15,3 +15,5 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { Header } from './Header';
 export { GuestBanner } from './GuestBanner';
 export { RecipeCard, RecipeCardSkeleton } from './RecipeCard';
+export { Icon } from './Icon';
+export type { IconName, IconProps } from './Icon';

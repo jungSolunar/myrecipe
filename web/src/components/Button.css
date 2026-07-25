@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--s-2);
-  min-height: var(--touch);
+  min-height: var(--control-h-form);
   padding: 0 var(--s-4);
   font-size: 14px;
   font-weight: 600;
@@ -17,7 +17,7 @@
     border-color var(--duration-normal) var(--ease-out);
 }
 .btn--sm {
-  min-height: 36px;
+  min-height: var(--control-h-toolbar);
   padding: 0 var(--s-3);
   font-size: 13px;
 }
@@ -27,7 +27,7 @@
 
 .btn--primary {
   background: var(--c-primary-700);
-  color: #fff;
+  color: var(--primary-fg);
 }
 .btn--primary:hover:not(:disabled) {
   background: var(--c-primary-800);
@@ -67,9 +67,10 @@
 /* loading 중에는 색을 유지 */
 .btn[aria-busy='true'] {
   background: var(--c-primary-700);
-  color: #fff;
+  color: var(--primary-fg);
   opacity: 0.85;
 }
 .btn--danger-solid[aria-busy='true'] {
   background: var(--c-error);
+  color: #fff; /* 솔리드 danger(red) 위 대비용 흰색 — 두 테마 동일 */
 }

@@ -1,4 +1,4 @@
-import { Button, Textarea } from '../../components';
+import { Button, Icon, Textarea } from '../../components';
 
 export interface StepListProps {
   steps: string[];
@@ -38,7 +38,7 @@ export function StepList({ steps, onChange }: StepListProps) {
               aria-label={`${i + 1}단계 삭제`}
               onClick={() => remove(i)}
             >
-              ✕
+              <Icon name="close" size={16} />
             </button>
           </div>
         ))}

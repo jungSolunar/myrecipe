@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from './Button';
+import { Icon } from './Icon';
 import './ConfirmDialog.css';
 
 export interface ConfirmDialogProps {
@@ -87,7 +88,7 @@ export function ConfirmDialog({
         aria-describedby={description ? descId : undefined}
       >
         <div className="dialog__icon" aria-hidden="true">
-          {variant === 'danger' ? '🗑' : '❔'}
+          <Icon name={variant === 'danger' ? 'trash' : 'help'} size={20} />
         </div>
         <h1 id={titleId} className="dialog__title">
           {title}

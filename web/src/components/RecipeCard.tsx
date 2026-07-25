@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { RecipeListItem } from '../api/types';
 import { Badge } from './Badge';
+import { Icon } from './Icon';
 import './RecipeCard.css';
 
 /**
@@ -24,7 +25,9 @@ export function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
               onError={() => setImgFailed(true)}
             />
           ) : (
-            <span aria-hidden="true">🍳 사진 없음</span>
+            <span className="rcard__thumb-empty" aria-hidden="true">
+              <Icon name="image" size={24} /> 사진 없음
+            </span>
           )}
         </div>
         <div className="rcard__body">

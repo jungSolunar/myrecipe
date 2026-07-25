@@ -1,10 +1,10 @@
-import { RecipeCard } from '../../components';
+import { Icon, RecipeCard } from '../../components';
 import type { RecipeListItem } from '../../api/types';
 import './recommend.css';
 
 /**
  * US-013 부족/충족 배지. design/components-recommendation.md 2.2.
- * - 부족 0: success 톤 "✓ 지금 만들 수 있어요"
+ * - 부족 0: success 톤 "지금 만들 수 있어요"(체크 라인 아이콘)
  * - 부족 1+: warning 톤 "부족 N개"
  * 색 + 텍스트 병기, aria-label 로 의미 명시(색에만 의존하지 않음).
  * Badge 컴포넌트는 aria-label 을 받지 않으므로 동일한 .badge 토큰 스타일을 재사용해 직접 렌더한다.
@@ -16,7 +16,7 @@ export function MissingBadge({ missingCount }: { missingCount: number }) {
         className="badge badge--success"
         aria-label="모든 재료 보유, 지금 만들 수 있음"
       >
-        ✓ 지금 만들 수 있어요
+        <Icon name="check" size={12} /> 지금 만들 수 있어요
       </span>
     );
   }

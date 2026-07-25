@@ -21,6 +21,11 @@
   color: var(--c-n-900);
   cursor: pointer;
 }
+.rec-toggle__label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
 .rec-toggle__caption {
   font-size: 12px;
   font-weight: 400;

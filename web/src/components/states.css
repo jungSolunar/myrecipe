@@ -10,6 +10,9 @@
 .state-box__icon {
   font-size: 32px;
   margin-bottom: var(--s-3);
+  display: flex;
+  justify-content: center;
+  color: var(--gray-8);
 }
 .state-box__title {
   font-size: 18px;

@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Link } from 'react-router-dom';
+import { Icon } from '../../components';
 import './recommend.css';
 
 export type RecommendDisabledReason = 'guest' | 'no-inventory' | null;
@@ -49,7 +50,10 @@ export function RecommendFilterToggle({
           </span>
         </label>
         <label className="rec-toggle__text" htmlFor={inputId}>
-          {disabledReason === 'guest' ? '🔒 ' : ''}만들 수 있는 레시피만
+          <span className="rec-toggle__label-row">
+            {disabledReason === 'guest' ? <Icon name="lock" size={14} /> : null}
+            만들 수 있는 레시피만
+          </span>
           <small id={captionId} className="rec-toggle__caption">
             내 재고로 부족 없이 만들 수 있는 것
           </small>
@@ -59,7 +63,7 @@ export function RecommendFilterToggle({
       {disabledReason === 'guest' && (
         <p className="rec-hint" id={hintId}>
           <span className="rec-tip" tabIndex={0} aria-label="안내">
-            ⓘ
+            <Icon name="info" size={16} />
             <span className="rec-tip__bubble" role="tooltip">
               로그인하면 내 재료로 만들 수 있는 레시피를 골라줘요.
             </span>
@@ -72,7 +76,7 @@ export function RecommendFilterToggle({
       {disabledReason === 'no-inventory' && (
         <p className="rec-hint" id={hintId}>
           <span className="rec-tip" tabIndex={0} aria-label="안내">
-            ⓘ
+            <Icon name="info" size={16} />
             <span className="rec-tip__bubble" role="tooltip">
               재고를 먼저 등록하면 사용할 수 있어요.
             </span>

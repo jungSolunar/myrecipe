@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { SelectHTMLAttributes } from 'react';
 import { cx } from '../lib/cx';
+import { Icon } from './Icon';
 import './fields.css';
 
 export interface SelectOption {
@@ -63,7 +64,7 @@ export function Select({
       )}
       {error && (
         <p id={errId} className="field__error" role="alert">
-          <span aria-hidden="true">⚠</span> {error}
+          <Icon name="warning" size={14} /> {error}
         </p>
       )}
     </div>
