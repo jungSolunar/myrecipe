@@ -3,11 +3,15 @@ import type { FormEvent } from 'react';
 import { Button, Select } from '../../components';
 import type { Ingredient } from '../../api/types';
 import { RECIPE_CATEGORY_OPTIONS } from '../ingredients/constants';
+import { RecommendFilterToggle } from './RecommendFilterToggle';
+import type { RecommendDisabledReason } from './RecommendFilterToggle';
 
 export interface RecipeFilters {
   q: string;
   category: string;
   ingredientId: string;
+  /** [US-013] 만들 수 있는 레시피만(추천 모드) 필터 적용 여부. */
+  available: boolean;
 }
 
 export interface SearchFilterBarProps {
@@ -17,6 +21,8 @@ export interface SearchFilterBarProps {
   resultCount?: number;
   onChange: (next: RecipeFilters) => void;
   onReset: () => void;
+  /** [US-013] 추천 토글 비활성 사유(비로그인/재고없음). null 이면 사용 가능. */
+  availableDisabledReason?: RecommendDisabledReason;
 }
 
 /** US-010 검색·필터 바. 검색 input + 카테고리/재료 Select + 활성 필터 칩 + 결과 수. */
@@ -26,6 +32,7 @@ export function SearchFilterBar({
   resultCount,
   onChange,
   onReset,
+  availableDisabledReason = null,
 }: SearchFilterBarProps) {
   const [queryInput, setQueryInput] = useState(filters.q);
 
@@ -84,6 +91,13 @@ export function SearchFilterBar({
             />
           </div>
         )}
+
+        {/* [US-013] 만들 수 있는 레시피만 추천 토글 */}
+        <RecommendFilterToggle
+          checked={filters.available}
+          disabledReason={availableDisabledReason}
+          onChange={(available) => onChange({ ...filters, available })}
+        />
       </div>
 
       {hasActive && (
@@ -132,7 +146,14 @@ export function SearchFilterBar({
 
       {typeof resultCount === 'number' && (
         <p className="search-filter__count" aria-live="polite">
-          검색 결과 {resultCount}건
+          {filters.available ? (
+            <>
+              만들 수 있는 레시피 {resultCount}건{' '}
+              <span className="rec-count__sort">· 부족 적은 순</span>
+            </>
+          ) : (
+            <>검색 결과 {resultCount}건</>
+          )}
         </p>
       )}
     </div>

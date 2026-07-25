@@ -7,6 +7,7 @@ import sqlite3
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 
 from ..db import utcnow
 from ..deps import get_current_user, get_db, require_user
@@ -24,6 +25,21 @@ from ..schemas import (
 )
 
 router = APIRouter(tags=["recipes"])
+
+
+# --------------------------------------------------------------------------
+# US-013: 목록 응답에 optional `missing_count` 를 부가한 확장 모델.
+# 기존 RecipeListItem/RecipeListResponse(schemas.py)를 건드리지 않고 하위호환 상위집합으로
+# 확장한다(nullable 필드 1개 추가). openapi.yaml RecipeListItem 계약과 1:1.
+# --------------------------------------------------------------------------
+class RecipeListItemV2(RecipeListItem):
+    missing_count: Optional[int] = None
+
+
+class RecipeListResponseV2(BaseModel):
+    data: List[RecipeListItemV2]
+    next_cursor: Optional[str] = None
+    has_more: bool
 
 
 # --------------------------------------------------------------------------
@@ -79,6 +95,31 @@ def _compute_availability(db: sqlite3.Connection, user_id: str, ri_rows: List[sq
         missing_ingredients=missing,
     )
     return availability, statuses
+
+
+def _missing_count(db: sqlite3.Connection, user_id: str, recipe_id: str) -> int:
+    """US-013: 레시피 재료 중 '내 재고에 없거나(=missing) 동일 단위 수량이 부족한(=insufficient)'
+    재료 수를 센다. US-012와 동일한 동일-단위 기준(단위 환산 없음)으로 판정한다.
+    """
+    ri_rows = db.execute(
+        "SELECT ingredient_id, quantity, unit FROM recipe_ingredients "
+        "WHERE recipe_id = ? AND deleted_at IS NULL",
+        (recipe_id,),
+    ).fetchall()
+    count = 0
+    for ri in ri_rows:
+        inv_rows = db.execute(
+            "SELECT quantity, unit FROM inventory_items "
+            "WHERE owner_id = ? AND ingredient_id = ? AND deleted_at IS NULL",
+            (user_id, ri["ingredient_id"]),
+        ).fetchall()
+        if not inv_rows:
+            count += 1  # missing
+        else:
+            available_same_unit = sum(r["quantity"] for r in inv_rows if r["unit"] == ri["unit"])
+            if available_same_unit < ri["quantity"]:
+                count += 1  # insufficient
+    return count
 
 
 def _recipe_detail(db: sqlite3.Connection, row: sqlite3.Row, current_user: Optional[sqlite3.Row]) -> RecipeDetail:
@@ -154,9 +195,19 @@ def _validate_and_write_ingredients(db: sqlite3.Connection, recipe_id: str,
 # --------------------------------------------------------------------------
 # 엔드포인트
 # --------------------------------------------------------------------------
-@router.get("/recipes", response_model=RecipeListResponse)
+def _list_item(r: sqlite3.Row, missing_count: Optional[int]) -> RecipeListItemV2:
+    return RecipeListItemV2(
+        id=r["id"], title=r["title"], category=r["category"], photo_url=r["photo_url"],
+        ingredient_count=r["ingredient_count"], owner_id=r["owner_id"],
+        created_at=r["created_at"], updated_at=r["updated_at"],
+        missing_count=missing_count,
+    )
+
+
+@router.get("/recipes", response_model=RecipeListResponseV2)
 def list_recipes(
     db: sqlite3.Connection = Depends(get_db),
+    current_user: Optional[sqlite3.Row] = Depends(get_current_user),
     cursor: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     q: Optional[str] = Query(None),
@@ -165,10 +216,20 @@ def list_recipes(
     available_only: bool = Query(False),
     sort: str = Query("recent"),
 ):
-    """US-005 목록 / US-010 검색·필터. 비로그인 열람 가능(US-003).
+    """US-005 목록 / US-010 검색·필터 / US-013 추천. 비로그인 열람 가능(US-003).
 
-    available_only / sort=missing_asc 는 US-013[Could]로 이번 범위 밖 —
-    파라미터는 계약대로 수용하되 정렬/필터에는 반영하지 않는다(recent 고정).
+    US-013 추천(로그인 사용자 한정):
+      - `missing_count`: 각 레시피의 부족 재료 수(US-012와 동일한 동일-단위 기준). 로그인 시 부가.
+        비로그인은 null.
+      - `available_only=true`: missing_count==0 인 레시피만. **로그인 사용자 한정**,
+        비로그인 시 UI가 토글을 비활성화하므로 서버는 no-op(전체 반환).
+      - `sort=missing_asc`: missing_count 오름차순, 동률은 최신순(id desc). 로그인 사용자 한정.
+
+    기본 동작 보존: available_only=false & sort=recent(기본) 이거나 비로그인일 때는
+    기존 커서 기반(id 내림차순) 쿼리/페이지네이션을 그대로 사용한다.
+    추천 모드(로그인 + available_only 또는 missing_asc)에서는 커서-id 규칙과 재정렬이
+    충돌하므로, 필터 매칭 전체를 계산·정렬한 뒤 커서 id 를 목록 내 위치 마커로 사용해
+    페이지네이션한다(계약의 커서 포맷 유지, 소규모 기준 Q6-a).
     """
     where = ["r.deleted_at IS NULL"]
     params: list = []
@@ -190,33 +251,62 @@ def list_recipes(
             )
             params.extend(ids)
             params.append(len(ids))
-    # 커서: id 내림차순(=최신순). cursor 이후(더 작은 id)만.
-    cursor_id = decode_cursor(cursor)
-    if cursor_id:
-        where.append("r.id < ?")
-        params.append(cursor_id)
 
-    sql = (
+    select_prefix = (
         "SELECT r.*, (SELECT COUNT(*) FROM recipe_ingredients ri "
         "WHERE ri.recipe_id = r.id AND ri.deleted_at IS NULL) AS ingredient_count "
         f"FROM recipes r WHERE {' AND '.join(where)} "
-        "ORDER BY r.id DESC LIMIT ?"
     )
-    params.append(limit + 1)
-    rows = db.execute(sql, params).fetchall()
 
-    has_more = len(rows) > limit
-    rows = rows[:limit]
-    data = [
-        RecipeListItem(
-            id=r["id"], title=r["title"], category=r["category"], photo_url=r["photo_url"],
-            ingredient_count=r["ingredient_count"], owner_id=r["owner_id"],
-            created_at=r["created_at"], updated_at=r["updated_at"],
-        )
-        for r in rows
-    ]
-    next_cursor = encode_cursor(rows[-1]["id"]) if has_more and rows else None
-    return RecipeListResponse(data=data, next_cursor=next_cursor, has_more=has_more)
+    # 추천 모드는 로그인 사용자에게만 의미가 있다. 비로그인은 no-op(기본 경로).
+    recommend = current_user is not None and (available_only or sort == "missing_asc")
+
+    if not recommend:
+        # ---- 기본 경로(기존 동작 완전 보존): id 내림차순 + 커서 id<? ----
+        cursor_id = decode_cursor(cursor)
+        params2 = list(params)
+        sql = select_prefix
+        if cursor_id:
+            sql += "AND r.id < ? "
+            params2.append(cursor_id)
+        sql += "ORDER BY r.id DESC LIMIT ?"
+        params2.append(limit + 1)
+        rows = db.execute(sql, params2).fetchall()
+
+        has_more = len(rows) > limit
+        rows = rows[:limit]
+        uid = current_user["id"] if current_user is not None else None
+        data = [
+            _list_item(r, _missing_count(db, uid, r["id"]) if uid else None)
+            for r in rows
+        ]
+        next_cursor = encode_cursor(rows[-1]["id"]) if has_more and rows else None
+        return RecipeListResponseV2(data=data, next_cursor=next_cursor, has_more=has_more)
+
+    # ---- 추천 모드(로그인 + available_only/missing_asc): 전체 계산 후 정렬·페이지네이션 ----
+    uid = current_user["id"]
+    all_rows = db.execute(select_prefix + "ORDER BY r.id DESC", params).fetchall()
+    enriched = [(r, _missing_count(db, uid, r["id"])) for r in all_rows]  # 이미 id desc
+
+    if available_only:
+        enriched = [e for e in enriched if e[1] == 0]
+    if sort == "missing_asc":
+        # 안정 정렬: missing_count 오름차순, 동률은 기존 id desc 순서 유지.
+        enriched.sort(key=lambda e: e[1])
+
+    start = 0
+    cursor_id = decode_cursor(cursor)
+    if cursor_id:
+        for idx, (r, _) in enumerate(enriched):
+            if r["id"] == cursor_id:
+                start = idx + 1
+                break
+    window = enriched[start:start + limit + 1]
+    has_more = len(window) > limit
+    window = window[:limit]
+    data = [_list_item(r, mc) for r, mc in window]
+    next_cursor = encode_cursor(window[-1][0]["id"]) if has_more and window else None
+    return RecipeListResponseV2(data=data, next_cursor=next_cursor, has_more=has_more)
 
 
 @router.post("/recipes", status_code=201, response_model=RecipeDetail)

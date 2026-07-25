@@ -10,7 +10,7 @@
     "openapi": "api/openapi.yaml",
     "tokens": "design/tokens.json"
   },
-  "exclude_patterns": ["*.test.*", "*_test.*", "__pycache__", "node_modules", ".pyc"],
+  "exclude_patterns": ["*.test.*", "*_test.*", "__pycache__", "node_modules", ".pyc", ".pytest_cache", "*.tsbuildinfo"],
   "test_commands": {
     "web": "cd web && npm test",
     "server": "cd server && .venv/bin/python -m pytest -q"

@@ -1,0 +1,165 @@
+/*
+ * recommend.css — US-013 추천 필터(만들 수 있는 레시피) 전용 스타일.
+ * design/wireframes/recipe-list-recommend.html 매핑을 따르며 tokens.css 변수만 사용(하드코딩 금지).
+ * 기존 recipes.css 는 수정하지 않고, 추가 요소만 이 파일에서 스타일링한다(회귀 방지).
+ */
+
+/* ===== 추천 토글 (SearchFilterBar 에 추가) ===== */
+.rec-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--touch);
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.rec-toggle__text {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-n-900);
+  cursor: pointer;
+}
+.rec-toggle__caption {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--c-n-600);
+}
+.rec-toggle__switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  cursor: pointer;
+}
+.rec-toggle__switch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.rec-toggle__track {
+  width: 44px;
+  height: 26px;
+  border-radius: var(--r-full);
+  background: var(--c-n-300);
+  transition: background 0.15s;
+  position: relative;
+  flex: none;
+}
+.rec-toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-full);
+  background: var(--c-n-0);
+  box-shadow: var(--sh-sm);
+  transition: left 0.15s;
+}
+.rec-toggle__switch input:checked + .rec-toggle__track {
+  background: var(--c-primary-600);
+}
+.rec-toggle__switch input:checked + .rec-toggle__track .rec-toggle__knob {
+  left: 21px;
+}
+.rec-toggle__switch:hover input:not(:checked):not(:disabled) + .rec-toggle__track {
+  background: var(--c-n-400);
+}
+.rec-toggle__switch:hover input:checked:not(:disabled) + .rec-toggle__track {
+  background: var(--c-primary-700);
+}
+.rec-toggle__switch input:focus-visible + .rec-toggle__track {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+.rec-toggle__switch input:disabled + .rec-toggle__track {
+  background: var(--c-n-200);
+  cursor: not-allowed;
+}
+.rec-toggle.is-disabled .rec-toggle__text {
+  color: var(--c-n-500);
+  cursor: not-allowed;
+}
+.rec-toggle.is-disabled .rec-toggle__switch,
+.rec-toggle.is-disabled .rec-toggle__switch input {
+  cursor: not-allowed;
+}
+
+/* disabled 사유 안내: 항상 보이는 hint + 툴팁 이중 제공 */
+.rec-hint {
+  font-size: 13px;
+  color: var(--c-n-600);
+  margin: var(--s-1) 0 var(--s-3);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  flex-wrap: wrap;
+}
+.rec-hint a {
+  text-decoration: underline;
+}
+.rec-tip {
+  position: relative;
+  display: inline-flex;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  align-items: center;
+  justify-content: center;
+}
+.rec-tip__bubble {
+  position: absolute;
+  bottom: calc(100% + var(--s-2));
+  left: 0;
+  background: var(--c-n-800);
+  color: var(--c-n-0);
+  font-size: 12px;
+  font-weight: 400;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  width: 230px;
+  box-shadow: var(--sh-md);
+  display: none;
+  z-index: 5;
+}
+.rec-tip:hover .rec-tip__bubble,
+.rec-tip:focus-within .rec-tip__bubble {
+  display: block;
+}
+
+/* ===== 추천 결과 배지 (RecipeCard 위에 오버레이, 카드 자체는 불변) ===== */
+.rec-card {
+  position: relative;
+}
+.rec-card__badge {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: 2;
+}
+.rec-card__badge .badge {
+  box-shadow: var(--sh-sm);
+}
+
+/* 결과 헤더 정렬 안내 */
+.rec-count__sort {
+  color: var(--c-n-500);
+}
+
+/* 추천 모드 상태 안내 박스 여백 */
+.rec-notice {
+  margin-bottom: var(--s-4);
+}
+
+/* 반응형: 모바일에서 토글이 아래 줄 full-width */
+@media (max-width: 767px) {
+  .rec-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -1,7 +1,12 @@
 # 프로젝트 상태
 
-현재 단계: v1.1.0 완료 (배포·재베이스라인은 사용자 조치 대기)
+현재 단계: v1.2.0 완료 (전체 백로그 US-001~013 구현 완료 · 배포·재베이스라인은 사용자 조치 대기)
 v1.0.0: 완료·베이스라인 시딩됨 (2026-07-25)
+v1.1.0: 완료·재베이스라인됨 (2026-07-25, reason=US-011)
+
+## v1.2.0 승인 사항
+- US-013 추천은 PRD 의도대로 기존 레시피 목록에 '만들 수 있는 레시피' 필터로 구현. 이를 위해 기존 보호 파일 수정 승인됨 (2026-07-25): server/app/routers/recipes.py(available_only/missing_asc 로직), FE 목록/필터바(RecipeListPage·SearchFilterBar·useRecipes·api/recipes.ts·types.ts). 기본 동작(필터 off)은 기존과 동일 보장. 구현 후 사용자가 baseline.sh --approve US-013로 재베이스라인 예정.
+- 계약(openapi.yaml)에 available_only/sort 파라미터 기존재 → API 계약 변경 없음
 
 ## v1.1.0 승인 사항
 - US-011 재고 화면 추가를 위해 보호 파일 2개(web/src/App.tsx 라우트, web/src/components/Header.tsx 네비)에 순수 추가 편집 승인됨 (2026-07-25). 구현 후 사용자가 baseline.sh --approve US-011로 재베이스라인 예정.
@@ -31,7 +36,7 @@ v1.0.0: 완료·베이스라인 시딩됨 (2026-07-25)
 | US-010 레시피 검색·필터 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | US-011 재고 관리 (Should) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅(v1.1.0) |
 | US-012 부족 재료 표시 (Should) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅(v1.1.0) |
-| US-013 보유재료 추천 (Could) | ✅ | - | - | - | - | - |
+| US-013 보유재료 추천 (Could) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅(v1.2.0) |
 
 ## 확정 사항
 - 범위 계층화: Must(US-001~010) 1차 → Should(US-011~012) → Could(US-013)

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  Alert,
   EmptyState,
   ErrorState,
   GuestBanner,
@@ -12,6 +13,8 @@ import { useAuth } from '../auth/useAuth';
 import { useIngredientList } from '../ingredients/useIngredients';
 import { SearchFilterBar } from './SearchFilterBar';
 import type { RecipeFilters } from './SearchFilterBar';
+import type { RecommendDisabledReason } from './RecommendFilterToggle';
+import { RecommendRecipeCard } from './RecommendRecipeCard';
 import { useRecipeList } from './useRecipes';
 import './recipes.css';
 
@@ -38,18 +41,33 @@ export function RecipeListPage() {
     q: params.get('q') ?? '',
     category: params.get('category') ?? '',
     ingredientId: params.get('ingredient_id') ?? '',
+    available: params.get('available') === '1',
   };
-
-  const recipeList = useRecipeList({
-    q: filters.q || undefined,
-    category: filters.category || undefined,
-    ingredient_id: filters.ingredientId ? [filters.ingredientId] : undefined,
-  });
 
   // 재료 필터 옵션: 로그인 회원만 개인 마스터 조회 가능(계약상 /ingredients 는 인증 필요)
   const ingredientList = useIngredientList();
   const ingredientOptions =
     status === 'authed' ? (ingredientList.data?.data ?? []) : [];
+
+  // [US-013] 추천 토글 비활성 사유 판정(클라이언트, 추가 서버 호출 없음).
+  // 비로그인 → guest. 로그인이지만 보유 재고(마스터) 0건 → no-inventory.
+  const availableDisabledReason: RecommendDisabledReason =
+    status !== 'authed'
+      ? 'guest'
+      : ingredientList.isSuccess && ingredientOptions.length === 0
+        ? 'no-inventory'
+        : null;
+  // 비활성 상태에서는 필터가 켜져 있어도 추천 모드로 동작하지 않는다(기본 목록 유지).
+  const recommendActive = filters.available && availableDisabledReason === null;
+
+  const recipeList = useRecipeList({
+    q: filters.q || undefined,
+    category: filters.category || undefined,
+    ingredient_id: filters.ingredientId ? [filters.ingredientId] : undefined,
+    // 추천 모드에서만 available_only + 부족 적은 순 정렬을 전달(off 면 undefined → 기존 요청과 동일).
+    available_only: recommendActive ? true : undefined,
+    sort: recommendActive ? 'missing_asc' : undefined,
+  });
 
   const items = recipeList.data?.data ?? [];
   const hasFilters = Boolean(filters.q || filters.category || filters.ingredientId);
@@ -59,12 +77,25 @@ export function RecipeListPage() {
     if (next.q) sp.set('q', next.q);
     if (next.category) sp.set('category', next.category);
     if (next.ingredientId) sp.set('ingredient_id', next.ingredientId);
+    if (next.available) sp.set('available', '1');
     setParams(sp);
   }
 
   function resetFilters() {
     setParams(new URLSearchParams());
   }
+
+  /** [US-013] 추천 필터만 끄기(다른 필터는 유지). */
+  function turnOffRecommend() {
+    applyFilters({ ...filters, available: false });
+  }
+
+  // [US-013] 추천 모드 결과 분포 → 상태 안내(F: 모두 충족 / G: 근접만).
+  const missingCounts = items.map((r) => r.missing_count ?? 0);
+  const allSufficient =
+    recommendActive && items.length > 0 && missingCounts.every((n) => n === 0);
+  const noneSufficient =
+    recommendActive && items.length > 0 && missingCounts.every((n) => n > 0);
 
   const resultCount = recipeList.isSuccess ? items.length : undefined;
 
@@ -91,6 +122,7 @@ export function RecipeListPage() {
         resultCount={resultCount}
         onChange={applyFilters}
         onReset={resetFilters}
+        availableDisabledReason={availableDisabledReason}
       />
 
       {recipeList.isLoading ? (
@@ -105,7 +137,23 @@ export function RecipeListPage() {
           onRetry={() => void recipeList.refetch()}
         />
       ) : items.length === 0 ? (
-        hasFilters ? (
+        recommendActive ? (
+          <EmptyState
+            icon="🥕"
+            title="보유 재료로 만들 수 있는 레시피가 아직 없어요"
+            description="재고를 더 등록하거나, 필터를 꺼서 전체 레시피를 보세요."
+            actions={
+              <>
+                <button type="button" className="btn btn--ghost" onClick={turnOffRecommend}>
+                  필터 끄기
+                </button>
+                <Link className="btn btn--primary" to="/inventory">
+                  재고 등록
+                </Link>
+              </>
+            }
+          />
+        ) : hasFilters ? (
           <EmptyState
             icon="🔍"
             title={`“${activeFilterLabel}”와 일치하는 레시피가 없어요`}
@@ -128,6 +176,24 @@ export function RecipeListPage() {
             }
           />
         )
+      ) : recommendActive ? (
+        <>
+          {allSufficient && (
+            <Alert variant="success" className="rec-notice">
+              지금 바로 만들 수 있는 레시피 {items.length}개예요.
+            </Alert>
+          )}
+          {noneSufficient && (
+            <Alert variant="info" className="rec-notice" icon="💡">
+              딱 맞는 레시피는 없지만, 재료 1~2개만 더 있으면 만들 수 있어요.
+            </Alert>
+          )}
+          <div className="recipe-grid">
+            {items.map((recipe) => (
+              <RecommendRecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="recipe-grid">
           {items.map((recipe) => (

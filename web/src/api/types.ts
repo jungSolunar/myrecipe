@@ -64,6 +64,11 @@ export interface RecipeListItem {
   category?: string | null;
   photo_url?: string | null;
   ingredient_count?: number;
+  /**
+   * [US-013 Could] available_only 추천 모드에서 backend 가 계산해 제공하는 부족 재료 수.
+   * 0 = 모두 충족(지금 만들 수 있음), 1+ = 부족 개수. 추천 모드가 아니면 생략(optional/nullable).
+   */
+  missing_count?: number | null;
   owner_id: string;
   created_at: string;
   updated_at: string;
@@ -118,6 +123,8 @@ export interface RecipeListParams {
   category?: string;
   ingredient_id?: string[];
   sort?: 'recent' | 'missing_asc';
+  /** [US-013 Could] 내 재고로 모든 재료를 충족할 수 있는 레시피만. 로그인 필요. */
+  available_only?: boolean;
 }
 
 // ---- 식재료 마스터 (US-008, US-009) ----

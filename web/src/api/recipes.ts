@@ -17,6 +17,8 @@ export function listRecipes(params: RecipeListParams = {}): Promise<Paginated<Re
       category: params.category,
       ingredient_id: params.ingredient_id,
       sort: params.sort,
+      // [US-013] 추천 모드에서만 전달. undefined 면 buildQuery 가 파라미터를 생략(기본 동작 불변).
+      available_only: params.available_only,
     },
   });
 }
