@@ -4,6 +4,9 @@
 v1.0.0: 완료·베이스라인 시딩됨 (2026-07-25)
 v1.1.0: 완료·재베이스라인됨 (2026-07-25, reason=US-011)
 
+## 문서
+- 화면 가이드: docs/screen-guide.md — 화면별 동작 위치·방식을 버전별로 추적(v1.2.0 기준 작성). 스킬 `screen-guide`로 관리, workflow G3 직후~G4에 갱신.
+
 ## v1.2.0 승인 사항
 - US-013 추천은 PRD 의도대로 기존 레시피 목록에 '만들 수 있는 레시피' 필터로 구현. 이를 위해 기존 보호 파일 수정 승인됨 (2026-07-25): server/app/routers/recipes.py(available_only/missing_asc 로직), FE 목록/필터바(RecipeListPage·SearchFilterBar·useRecipes·api/recipes.ts·types.ts). 기본 동작(필터 off)은 기존과 동일 보장. 구현 후 사용자가 baseline.sh --approve US-013로 재베이스라인 예정.
 - 계약(openapi.yaml)에 available_only/sort 파라미터 기존재 → API 계약 변경 없음

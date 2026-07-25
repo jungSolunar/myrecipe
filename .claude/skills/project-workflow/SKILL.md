@@ -16,7 +16,12 @@ description: 기획→디자인→API계약→구현→운영 파이프라인의
 3. frontend-dev → web/ 구현                  [게이트 G3]
    backend-dev  → server/ 구현               [게이트 G3]  (3단계도 병렬 가능)
 4. ops          → CI/배포/릴리스 노트         [게이트 G4]
+   planner      → docs/screen-guide.md 갱신   (스킬 `screen-guide`, G3 직후~G4)
 ```
+
+> **화면 가이드(screen-guide)**: 각 버전의 G3(구현) 통과 직후, 그 버전에서 추가·변경된
+> 화면/동작을 `docs/screen-guide.md`에 버전 꼬리표와 함께 반영한다(planner 위임).
+> "이 기능 어디서 어떻게 쓰나요"에 답하는 화면 기준 기획문서.
 
 ## 검증 게이트 (다음 단계 진입 조건)
 - **G0**: docs/requirements-interview.md가 CLOSED 상태
@@ -25,7 +30,8 @@ description: 기획→디자인→API계약→구현→운영 파이프라인의
 - **G2**: Must 스토리 전 화면 와이어프레임 + openapi.yaml에 example 포함 전체 스키마
 - **G3**: lint/test/build 전체 통과, FE가 계약에 없는 필드 미사용,
   **`./harness/check.sh` 통과 (기존 화면/기능 무변경 확인)** ← 회귀 방지 하네스
-- **G4**: CI 그린(하네스 스텝 포함), 배포·롤백 절차 문서 존재
+- **G4**: CI 그린(하네스 스텝 포함), 배포·롤백 절차 문서 존재,
+  **`docs/screen-guide.md`가 이번 버전의 추가·변경 화면을 반영** (스킬 `screen-guide`)
 - **G4 이후**: 사용자 승인 하에 `./harness/baseline.sh --approve <스토리ID>`로
   새 기능을 보호 대상에 편입
 
