@@ -5,8 +5,9 @@
   padding: var(--s-6) var(--s-4) var(--s-16);
 }
 .inv-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: var(--s-2);
 }
 .inv-sub {
@@ -92,9 +93,10 @@
   display: inline-block;
   padding: 2px var(--s-2);
   border-radius: var(--r-full);
-  background: var(--c-n-100);
-  color: var(--c-n-700);
-  font-size: 12px;
+  background: var(--gray-3);
+  color: var(--gray-11);
+  font-size: 11px;
+  font-weight: 600;
 }
 .inv-qty {
   font-weight: 600;
@@ -132,7 +134,7 @@
 .expiry-badge--ok {
   background: var(--c-success-bg);
   color: var(--c-success);
-  border-color: var(--c-primary-200);
+  border-color: var(--c-success);
 }
 .expiry-badge--soon {
   background: var(--c-warning-bg);

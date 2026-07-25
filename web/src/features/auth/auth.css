@@ -4,11 +4,18 @@
   padding: var(--s-8) var(--s-4) var(--s-16);
 }
 .auth-brand {
-  text-align: center;
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  font-size: 20px;
   font-weight: 700;
-  color: var(--c-primary-700);
+  letter-spacing: -0.01em;
+  color: var(--foreground);
   margin-bottom: var(--s-6);
+}
+.auth-brand svg {
+  color: var(--accent-11);
 }
 .auth-card {
   background: var(--c-card);
@@ -18,8 +25,9 @@
   padding: var(--s-6);
 }
 .auth-card h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1.35;
   margin-bottom: var(--s-2);
 }

@@ -7,6 +7,15 @@ v1.1.0: 완료·재베이스라인됨 (2026-07-25, reason=US-011)
 ## 문서
 - 화면 가이드: docs/screen-guide.md — 화면별 동작 위치·방식을 버전별로 추적(v1.2.0 기준 작성). 스킬 `screen-guide`로 관리, workflow G3 직후~G4에 갱신.
 
+## v2.0.0 디자인 리뉴얼 승인 사항 (2026-07-25)
+- 기존 FE(web/src, 하네스 protected)를 v2.0.0 디자인 시스템(레시피 상자 · Radix mint accent + slate)으로 **풀 재디자인** 착수 승인됨. 셸까지 교체(256px 사이드바 + 64px 헤더 + design-guide §3 골격 5종).
+- 이는 Additive-Only 예외: 토큰(web/src/styles/tokens.css)·global.css·컴포넌트/화면 CSS·AppLayout/Header 등 protected 파일 다수 변경 불가피 → 사용자가 명시 승인.
+- **기능·동작·접근성 계약(라우팅, 텍스트/role/label, 기존 테스트)** 은 불변 유지. 기존 테스트 파일 수정 금지, 전부 통과 상태로만 완료.
+- 완료 후 회귀 하네스는 예상대로 실패(재디자인이므로) → 사용자가 `./harness/baseline.sh --approve v2.0.0` 로 재베이스라인 예정. 에이전트는 approve를 직접 실행하지 않음.
+- 기준 규격: design/v2.0.0/design-guide.md(정본) · design/tokens.css · design/v2.0.0/wireframes/ · design-system 스킬.
+- **FE 구현 완료 (2026-07-25):** 토큰 레이어 v2.0.0 재정의(호환 레이어로 기존 `--c-*` 이름 유지) + 셸 재구성(상단 Header→256px 좌측 사이드바, 라인 SVG 브랜드, data-theme 다크 토글) + 화면/공용 컴포넌트 리스타일. `npm run build` 성공 · `npm test` 43/43 통과 · 기능/라우팅/계약 불변. 하네스는 예상대로 red(파일 동결 위반만, 기능 회귀 없음) → 사용자 `./harness/baseline.sh --approve v2.0.0` 대기.
+- **후속 과제:** 레시피 상세 §3.3 2열 sticky 미적용(단일 컬럼 유지) · 잔여 이모지(EmptyState/GuestBanner/Alert/추천 토글 등 프롭 분산분) 라인 SVG 교체 · 데스크톱 밀도(현 44px 터치 유지) · 다크모드 전화면 QA 미수행.
+
 ## v1.2.0 승인 사항
 - US-013 추천은 PRD 의도대로 기존 레시피 목록에 '만들 수 있는 레시피' 필터로 구현. 이를 위해 기존 보호 파일 수정 승인됨 (2026-07-25): server/app/routers/recipes.py(available_only/missing_asc 로직), FE 목록/필터바(RecipeListPage·SearchFilterBar·useRecipes·api/recipes.ts·types.ts). 기본 동작(필터 off)은 기존과 동일 보장. 구현 후 사용자가 baseline.sh --approve US-013로 재베이스라인 예정.
 - 계약(openapi.yaml)에 available_only/sort 파라미터 기존재 → API 계약 변경 없음

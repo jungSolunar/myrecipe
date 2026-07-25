@@ -8,6 +8,10 @@
 #       레시피-식재료 연결(요청 본문 임베드) 정의.
 #     - Should(US-011 재고 / US-012 부족 재료)·Could(US-013 추천)는 확장 여지로
 #       엔드포인트/스키마를 포함하되 "필수 계약 대상 아님(x-story-priority)"으로 표기.
+#   v1.2.0 (2026-07-25, backend-dev, G3)
+#     - US-013 [Could] 추천 로직 구현. GET /recipes 의 available_only/sort=missing_asc 를 실제 반영.
+#     - RecipeListItem 에 optional nullable `missing_count`(integer) 추가 — 로그인 사용자의
+#       재고 대비 부족 재료 수. 비로그인/미계산 시 null. (additive: 기존 필드/엔드포인트 불변)
 #
 # 규칙(api-conventions 스킬 준수):
 #   - URL: /api/v1/, 복수 명사 리소스, 동사 금지
@@ -20,7 +24,7 @@ openapi: 3.0.3
 
 info:
   title: 레시피 & 식재료 관리 API
-  version: 1.0.0
+  version: 1.2.0
   description: |
     개인 회원이 자신의 레시피와 식재료를 등록·검색·관리하는 웹서비스 API.
 
@@ -870,6 +874,13 @@ components:
         ingredient_count:
           type: integer
           example: 5
+        missing_count:
+          type: integer
+          nullable: true
+          description: >-
+            [US-013] 로그인 사용자의 재고 대비 부족한(없거나 동일 단위 기준 수량 미달) 재료 수.
+            비로그인 또는 미계산 시 null. 단위 환산 미지원(US-012와 동일 판정 기준).
+          example: 2
         owner_id:
           type: string
           example: usr_01HZX2Kme
@@ -887,6 +898,7 @@ components:
         category: 한식
         photo_url: https://cdn.example.com/u/rcp_01HZX2KpQ.jpg
         ingredient_count: 5
+        missing_count: 2
         owner_id: usr_01HZX2Kme
         created_at: '2026-07-24T10:00:00Z'
         updated_at: '2026-07-24T10:00:00Z'

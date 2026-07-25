@@ -3,12 +3,14 @@
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
   overflow: hidden;
-  box-shadow: var(--sh-sm);
   display: flex;
   flex-direction: column;
+  transition: box-shadow var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out);
 }
 .rcard:hover {
   box-shadow: var(--sh-md);
+  border-color: var(--c-border-strong);
 }
 .rcard__link {
   display: flex;
@@ -22,11 +24,11 @@
 }
 .rcard__thumb {
   aspect-ratio: 16 / 10;
-  background: var(--c-n-100);
+  background: var(--gray-3);
   display: grid;
   place-items: center;
-  color: var(--c-n-400);
-  font-size: 14px;
+  color: var(--gray-9);
+  font-size: 13px;
 }
 .rcard__thumb img {
   width: 100%;
@@ -38,8 +40,10 @@
   flex: 1;
 }
 .rcard__title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
   margin-bottom: var(--s-2);
   color: var(--c-n-900);
 }
@@ -50,6 +54,7 @@
   gap: var(--s-2);
   font-size: 12px;
   color: var(--c-n-600);
+  font-variant-numeric: tabular-nums;
 }
 .rcard__sk-line {
   height: 14px;

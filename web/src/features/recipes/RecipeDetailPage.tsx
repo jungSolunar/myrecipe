@@ -8,7 +8,7 @@ import { useDeleteRecipe, useRecipeDetail } from './useRecipes';
 import './recipes.css';
 
 function statusBadge(status: RecipeIngredient['status']) {
-  if (status === 'sufficient') return <Badge tone="success">✓ 보유</Badge>;
+  if (status === 'sufficient') return <Badge tone="success">보유</Badge>;
   if (status === 'insufficient' || status === 'missing') return <Badge tone="warning">부족</Badge>;
   return null;
 }
@@ -98,7 +98,7 @@ export function RecipeDetailPage() {
             onError={() => setHeroFailed(true)}
           />
         ) : (
-          <span aria-hidden="true">🍳 사진 없음</span>
+          <span aria-hidden="true">사진 없음</span>
         )}
       </div>
 
@@ -111,7 +111,7 @@ export function RecipeDetailPage() {
       {isOwner && (
         <div className="owner-actions">
           <Link className="btn btn--ghost" to={`/recipes/${recipe.id}/edit`}>
-            ✏ 수정
+            수정
           </Link>
           <button
             type="button"
@@ -121,7 +121,7 @@ export function RecipeDetailPage() {
               setConfirmOpen(true);
             }}
           >
-            🗑 삭제
+            삭제
           </button>
         </div>
       )}

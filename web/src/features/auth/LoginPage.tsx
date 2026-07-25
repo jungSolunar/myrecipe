@@ -50,7 +50,14 @@ export function LoginPage() {
 
   return (
     <div className="auth-wrap">
-      <div className="auth-brand">🥕 레시피 상자</div>
+      <div className="auth-brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 2.5 20 7v10l-8 4.5L4 17V7z" />
+          <path d="M9 11v3a3 3 0 0 0 6 0v-3" />
+          <path d="M7.5 11h9" />
+        </svg>
+        레시피 상자
+      </div>
       <main className="auth-card" aria-labelledby="login-title">
         <h1 id="login-title">로그인</h1>
         <p className="auth-sub">

@@ -1,4 +1,4 @@
-/* global.css — reset + 전역 요소 스타일. 값은 tokens.css 변수만 사용. */
+/* global.css — reset + 전역 요소 + v2.0.0 공통 셸. 값은 tokens.css 변수만 사용. */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -15,8 +15,8 @@ body {
   font-family: var(--font);
   background: var(--c-page);
   color: var(--c-n-900);
-  line-height: 1.6;
-  font-size: 16px;
+  line-height: 1.55;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -26,13 +26,13 @@ img {
 }
 
 a {
-  color: var(--c-primary-700);
+  color: var(--accent-11);
   text-decoration: none;
 }
 
-/* 전역 포커스 표시 (접근성) */
+/* 전역 포커스 표시 (접근성) — accent-8 링 */
 :focus-visible {
-  outline: 2px solid var(--c-focus);
+  outline: 2px solid var(--accent-8);
   outline-offset: 2px;
   border-radius: var(--r-sm);
 }
@@ -55,14 +55,228 @@ a {
   position: absolute;
   left: -999px;
   top: 0;
-  background: var(--c-primary-700);
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-fg);
   padding: var(--s-2) var(--s-4);
   border-radius: var(--r-md);
   z-index: 100;
 }
 .skip-link:focus {
   left: var(--s-2);
+  top: var(--s-2);
+}
+
+/* ══════════════════════════════════════════════════════════════
+ * 공통 셸: [aside 256px sticky] [ header 64px sticky | main ]
+ * ════════════════════════════════════════════════════════════ */
+.app-shell {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100%;
+}
+.app-shell__col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── 사이드바 ─── */
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+  flex: 0 0 var(--layout-sidebar-w);
+  width: var(--layout-sidebar-w);
+  height: 100vh;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-4) var(--s-3);
+  gap: var(--s-4);
+  overflow-y: auto;
+}
+.sidebar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+.sidebar__brand svg {
+  flex: 0 0 auto;
+  color: var(--accent-11);
+}
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.sidebar__group {
+  margin-top: var(--s-3);
+}
+.sidebar__caption {
+  padding: 0 var(--s-2);
+  margin-bottom: var(--s-1);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+  color: var(--gray-10);
+}
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 7px var(--s-3);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-12);
+  min-height: 34px;
+}
+.sidebar__link:hover {
+  background: var(--gray-2);
+}
+.sidebar__link svg {
+  flex: 0 0 auto;
+  color: var(--gray-9);
+}
+.sidebar__link.is-active {
+  background: var(--accent-4);
+  color: var(--accent-11);
+  font-weight: 600;
+}
+.sidebar__link.is-active svg {
+  color: var(--accent-11);
+}
+.sidebar__spacer {
+  flex: 1;
+}
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border-top: 1px solid var(--border);
+}
+.sidebar__avatar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: var(--r-full);
+  background: var(--accent-9);
+  color: var(--accent-12);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.sidebar__email {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── 상단 헤더 ─── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--layout-header-h);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0 var(--s-6);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+.topbar__title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+.topbar__spacer {
+  flex: 1;
+}
+.topbar__icon-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  color: var(--gray-11);
+  cursor: pointer;
+  transition: background-color var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out);
+}
+.topbar__icon-btn:hover {
+  background: var(--gray-2);
+  border-color: var(--border-strong);
+}
+
+/* ─── 반응형: 좁은 화면에서 사이드바를 상단으로 ─── */
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    flex-basis: auto;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: var(--s-2) var(--s-3);
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s-2);
+    overflow-x: auto;
+  }
+  .sidebar__brand {
+    flex: 0 0 auto;
+  }
+  .sidebar__nav {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s-1);
+  }
+  .sidebar__group {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+  }
+  .sidebar__caption {
+    display: none;
+  }
+  .sidebar__link {
+    white-space: nowrap;
+  }
+  .sidebar__spacer {
+    flex: 1;
+  }
+  .sidebar__user {
+    border-top: none;
+    padding: var(--s-1);
+    flex: 0 0 auto;
+  }
+  .sidebar__email {
+    display: none;
+  }
 }
 
 @keyframes spin {

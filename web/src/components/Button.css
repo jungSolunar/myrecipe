@@ -5,7 +5,7 @@
   gap: var(--s-2);
   min-height: var(--touch);
   padding: 0 var(--s-4);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   font-family: inherit;
   border: 1px solid transparent;
@@ -13,6 +13,8 @@
   cursor: pointer;
   white-space: nowrap;
   line-height: 1.2;
+  transition: background-color var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out);
 }
 .btn--sm {
   min-height: 36px;
@@ -31,13 +33,15 @@
   background: var(--c-primary-800);
 }
 
+/* Secondary(=ghost): 투명 배경 + gray-12 텍스트 + gray-7 테두리 */
 .btn--ghost {
-  background: var(--c-n-0);
-  color: var(--c-primary-700);
-  border-color: var(--c-border-strong);
+  background: transparent;
+  color: var(--gray-12);
+  border-color: var(--gray-7);
 }
 .btn--ghost:hover:not(:disabled) {
-  background: var(--c-n-50);
+  background: var(--gray-2);
+  border-color: var(--gray-8);
 }
 
 .btn--danger {
