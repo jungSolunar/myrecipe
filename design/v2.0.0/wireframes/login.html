@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!-- US-002 로그인, US-003 비로그인 열람·로그인 게이트 -->
+<!-- wireframe: 인증형 (로그인) / v2.0.0 · 레시피 상자 디자인 시스템 (Radix mint + slate) -->
+<!-- 기준: design/v2.0.0/design-guide.md · design/tokens.css. 인증 화면은 공통 셸(aside+topbar)을 쓰지 않는 전용 레이아웃. -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인 · 레시피 상자</title>
+<style>
+/* ── tokens.css (v2.0.0) 인라인: 리뷰용 단일 파일화. 값 변경 금지 ── */
+:root{
+  --font-sans:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Roboto,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code','D2Coding',Consolas,monospace;
+  --fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:16px;--fs-xl:18px;--fs-2xl:20px;--fs-3xl:24px;--fs-4xl:30px;--fs-5xl:36px;
+  --fw-regular:400;--fw-medium:500;--fw-semibold:600;--fw-bold:700;
+  --lh-tight:1.25;--lh-snug:1.4;--lh-normal:1.55;--lh-loose:1.7;
+  --ls-tight:-0.02em;--ls-normal:0;--ls-wide:0.04em;--ls-caps:0.06em;
+  --background:hsl(210 20% 96%);--surface-1:#fff;--surface-2:hsl(210 20% 90%);
+  --foreground:hsl(222 47% 11%);--fg-muted:hsl(215 20% 30%);--fg-subtle:hsl(215 16% 47%);
+  --border:hsl(210 20% 90%);--border-strong:hsl(215 20% 80%);
+  --primary:hsl(219 99% 53%);--primary-fg:#fff;--ring:hsl(219 99% 53%);--destructive:hsl(0 84% 60%);
+  --accent-1:#fbfefd;--accent-2:#f2fbf7;--accent-3:#ddf7ed;--accent-4:#c8f0e0;--accent-5:#b3e7d1;--accent-6:#9adcc0;--accent-7:#7accac;--accent-8:#4cba91;--accent-9:#86ead4;--accent-10:#7ae0c8;--accent-11:#007a5e;--accent-12:#003d2e;
+  --gray-1:#fcfcfd;--gray-2:#f9f9fb;--gray-3:#eff0f3;--gray-4:#e7e8ec;--gray-5:#e0e1e6;--gray-6:#d8d9e0;--gray-7:#cdced7;--gray-8:#b9bbc6;--gray-9:#8b8d98;--gray-10:#80828d;--gray-11:#60646c;--gray-12:#1c2024;
+  --status-success:#16a34a;--status-success-bg:#dcfce7;--status-warning:#d97706;--status-warning-bg:#fef3c7;--status-danger:#dc2626;--status-danger-bg:#fee2e2;--status-info:#2563eb;--status-info-bg:#dbeafe;--status-running:#2563eb;--status-flaky:#d97706;
+  --radius-1:3px;--radius-2:4px;--radius-3:6px;--radius-4:8px;--radius-5:12px;--radius-6:16px;--radius-full:9999px;
+  --shadow-1:0 1px 2px 0 rgb(0 0 0/.05);--shadow-2:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1);--shadow-3:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);--shadow-4:0 10px 15px -3px rgb(0 0 0/.1);--shadow-5:0 20px 25px -5px rgb(0 0 0/.1);
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:32px;--space-8:40px;--space-9:48px;
+  --layout-sidebar-w:256px;--layout-header-h:64px;
+  --ease-out:cubic-bezier(.4,0,.2,1);--duration-fast:120ms;--duration-normal:200ms;--duration-slow:320ms;
+}
+[data-theme='dark']{
+  --background:hsl(210 20% 5%);--surface-1:hsl(210 15% 10%);--surface-2:hsl(210 10% 14%);
+  --foreground:hsl(240 10% 80%);--fg-muted:#a6a6a6;--fg-subtle:#7d7d8a;--border:hsl(210 10% 20%);--border-strong:hsl(210 10% 28%);
+  --primary:hsl(217 100% 64%);--primary-fg:hsl(210 20% 5%);--ring:hsl(217 100% 64%);--destructive:hsl(0 62% 50%);
+  --accent-1:#0a1f1c;--accent-2:#0f2a25;--accent-3:#143b32;--accent-4:#174c40;--accent-5:#1c5e4d;--accent-6:#21745d;--accent-7:#298d72;--accent-8:#2fa987;--accent-9:#86ead4;--accent-10:#9aefdc;--accent-11:#58d5b3;--accent-12:#c4f5e5;
+  --gray-1:#111113;--gray-2:#18191b;--gray-3:#212225;--gray-4:#272a2d;--gray-5:#2e3135;--gray-6:#363a3f;--gray-7:#43484e;--gray-8:#5a6169;--gray-9:#696e77;--gray-10:#777b84;--gray-11:#b0b4ba;--gray-12:#edeef0;
+  --status-success-bg:rgb(22 163 74/.18);--status-warning-bg:rgb(217 119 6/.18);--status-danger-bg:rgb(220 38 38/.18);--status-info-bg:rgb(37 99 235/.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--background);color:var(--foreground);font-size:var(--fs-base);line-height:var(--lh-normal);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent-8);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+
+.avatar{width:22px;height:22px;flex:none;border-radius:var(--radius-full);background:var(--accent-9);color:var(--accent-12);display:grid;place-items:center;font-size:var(--fs-xs);font-weight:var(--fw-bold)}
+
+/* ── 버튼 ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border-radius:var(--radius-3);font-size:var(--fs-sm);font-weight:var(--fw-semibold);border:1px solid transparent;transition:background var(--duration-normal) var(--ease-out),border-color var(--duration-normal) var(--ease-out)}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-secondary{background:transparent;color:var(--gray-12);border-color:var(--gray-7)}
+.btn-secondary:hover{background:var(--gray-2)}
+.btn-quiet{background:none;border:none;color:var(--accent-11);font-size:var(--fs-xs);font-weight:var(--fw-semibold);height:auto;padding:0}
+
+/* ── 카드 ── */
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-4);padding:16px;display:flex;flex-direction:column;gap:10px}
+
+/* ── 리뷰용 상태 구획 라벨 ── */
+.statelabel{font-size:11px;font-weight:var(--fw-semibold);text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--gray-10);margin-top:var(--space-4)}
+.note{background:var(--status-info-bg);color:var(--status-info);border-radius:var(--radius-3);padding:12px 14px;font-size:var(--fs-sm);line-height:var(--lh-snug)}
+
+/* ══ 인증 화면 전용 (사이드바 셸 미사용) ══ */
+.authwrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;background:var(--background);padding:var(--space-9) var(--space-4) var(--space-8)}
+.authbrand{display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-md);font-weight:var(--fw-bold);letter-spacing:var(--ls-tight);color:var(--foreground);margin-bottom:var(--space-7)}
+.authbrand .hex{width:26px;height:26px;display:grid;place-items:center;color:var(--accent-11)}
+.authcol{width:100%;max-width:400px;display:flex;flex-direction:column;gap:var(--space-4)}
+.card-auth{padding:24px;gap:20px;box-shadow:var(--shadow-2)}
+.authhead h1{font-size:var(--fs-xl);font-weight:var(--fw-semibold);letter-spacing:var(--ls-tight)}
+.authhead p{font-size:var(--fs-sm);color:var(--fg-muted);margin-top:4px;line-height:var(--lh-snug)}
+.form{display:flex;flex-direction:column;gap:var(--space-4)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:var(--fw-medium);color:var(--fg-muted)}
+.field .req{color:var(--status-danger);margin-left:2px}
+.field input{height:36px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--foreground);font:inherit;font-size:var(--fs-sm)}
+.field input::placeholder{color:var(--gray-9)}
+.field .hint{font-size:11px;color:var(--fg-muted)}
+.field .err{font-size:11px;color:var(--status-danger)}
+.field input.invalid{border-color:var(--status-danger)}
+.btn-block{width:100%;height:36px}
+.btn:disabled{opacity:.65;cursor:not-allowed}
+.authfoot{display:flex;justify-content:center;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--fg-muted)}
+.authfoot a{color:var(--accent-11);font-weight:var(--fw-semibold)}
+.alert{border-radius:var(--radius-3);padding:12px 14px;font-size:var(--fs-sm);line-height:var(--lh-snug);display:flex;flex-direction:column;gap:4px}
+.alert-danger{background:var(--status-danger-bg);color:var(--status-danger)}
+.alert-success{background:var(--status-success-bg);color:var(--status-success)}
+.alert a{color:inherit;text-decoration:underline;font-weight:var(--fw-semibold)}
+.alert .sub{font-size:12px;color:var(--fg-muted);font-weight:var(--fw-regular)}
+.userbar{display:flex;align-items:center;gap:var(--space-2);padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-3);background:var(--surface-1)}
+.userbar .who{flex:1;min-width:0;font-size:var(--fs-sm);color:var(--foreground)}
+.spinner{width:18px;height:18px;flex:none;border-radius:50%;border:2px solid var(--accent-4);border-top-color:var(--accent-11);animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="authwrap" data-theme="light">
+
+  <div class="authbrand">
+    <span class="hex" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2 21 7v10l-9 5-9-5V7l9-5Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 11h8M9 11v4a3 3 0 0 0 6 0v-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </span>
+    레시피 상자
+  </div>
+
+  <div class="authcol">
+
+    <!-- ══════ 기본 로그인 폼 ══════ -->
+    <div class="card card-auth">
+      <div class="authhead">
+        <h1>로그인</h1>
+        <p>등록·수정 기능을 사용하려면 로그인하세요. 열람은 로그인 없이도 가능합니다.</p>
+      </div>
+      <form class="form">
+        <div class="field">
+          <label for="email">이메일<span class="req" aria-label="필수">*</span></label>
+          <input id="email" name="email" type="email" placeholder="chef@example.com" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="password">비밀번호<span class="req" aria-label="필수">*</span></label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">로그인</button>
+      </form>
+      <div class="authfoot">
+        <a href="signup.html">계정이 없나요? 회원가입</a>
+        <span aria-hidden="true">·</span>
+        <a href="recipe-list.html">로그인 없이 둘러보기</a>
+      </div>
+    </div>
+
+    <!-- ═══ 상태 화면 (리뷰용) ═══ -->
+    <div class="statelabel">상태 A — 로그인 게이트 진입 (US-003)</div>
+    <div class="note">레시피를 등록하려면 로그인이 필요합니다. 로그인 후 원래 화면으로 돌아갑니다(returnTo).</div>
+
+    <div class="statelabel">상태 B — 로그인 실패 (US-002 AC2)</div>
+    <div class="alert alert-danger">
+      <span>이메일 또는 비밀번호가 올바르지 않습니다.</span>
+      <span class="sub">보안을 위해 어떤 항목이 틀렸는지 구분하지 않습니다.</span>
+    </div>
+
+    <div class="statelabel">상태 C — 로그인 처리 중</div>
+    <button type="button" class="btn btn-primary btn-block" disabled aria-busy="true">
+      <span class="spinner" aria-hidden="true"></span>로그인 중…
+    </button>
+
+    <div class="statelabel">상태 D — 로그인됨 / 로그아웃</div>
+    <div class="userbar">
+      <span class="avatar">C</span>
+      <span class="who">chef@example.com</span>
+      <button type="button" class="btn btn-secondary">로그아웃</button>
+    </div>
+    <div class="note">로그아웃 시 열람 전용 상태로 복귀. 이 UserMenu는 전 화면 헤더 우측에서 재사용됩니다.</div>
+
+  </div>
+</div>
+</body>
+</html>

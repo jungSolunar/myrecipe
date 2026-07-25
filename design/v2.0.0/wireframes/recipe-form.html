@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<!-- US-004 레시피 등록, US-006 레시피 수정, US-009 재료 연결(마스터 검색/신규 제안), US-003 비로그인 게이트 -->
+<!-- skeleton: 폼·편집형 / v2.0.0 · 레시피 상자 디자인 시스템 (Radix mint + slate) -->
+<!-- 기준: design/v2.0.0/design-guide.md §4.4 · design/tokens.css. 공통 셸은 recipe-list.html 정본과 동일. -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>새 레시피 · 레시피 상자</title>
+<style>
+/* ── tokens.css (v2.0.0) 인라인: 리뷰용 단일 파일화. 값 변경 금지 ── */
+:root{
+  --font-sans:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Roboto,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code','D2Coding',Consolas,monospace;
+  --fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:16px;--fs-xl:18px;--fs-2xl:20px;--fs-3xl:24px;--fs-4xl:30px;--fs-5xl:36px;
+  --fw-regular:400;--fw-medium:500;--fw-semibold:600;--fw-bold:700;
+  --lh-tight:1.25;--lh-snug:1.4;--lh-normal:1.55;--lh-loose:1.7;
+  --ls-tight:-0.02em;--ls-normal:0;--ls-wide:0.04em;--ls-caps:0.06em;
+  --background:hsl(210 20% 96%);--surface-1:#fff;--surface-2:hsl(210 20% 90%);
+  --foreground:hsl(222 47% 11%);--fg-muted:hsl(215 20% 30%);--fg-subtle:hsl(215 16% 47%);
+  --border:hsl(210 20% 90%);--border-strong:hsl(215 20% 80%);
+  --primary:hsl(219 99% 53%);--primary-fg:#fff;--ring:hsl(219 99% 53%);--destructive:hsl(0 84% 60%);
+  --accent-1:#fbfefd;--accent-2:#f2fbf7;--accent-3:#ddf7ed;--accent-4:#c8f0e0;--accent-5:#b3e7d1;--accent-6:#9adcc0;--accent-7:#7accac;--accent-8:#4cba91;--accent-9:#86ead4;--accent-10:#7ae0c8;--accent-11:#007a5e;--accent-12:#003d2e;
+  --gray-1:#fcfcfd;--gray-2:#f9f9fb;--gray-3:#eff0f3;--gray-4:#e7e8ec;--gray-5:#e0e1e6;--gray-6:#d8d9e0;--gray-7:#cdced7;--gray-8:#b9bbc6;--gray-9:#8b8d98;--gray-10:#80828d;--gray-11:#60646c;--gray-12:#1c2024;
+  --status-success:#16a34a;--status-success-bg:#dcfce7;--status-warning:#d97706;--status-warning-bg:#fef3c7;--status-danger:#dc2626;--status-danger-bg:#fee2e2;--status-info:#2563eb;--status-info-bg:#dbeafe;--status-running:#2563eb;--status-flaky:#d97706;
+  --radius-1:3px;--radius-2:4px;--radius-3:6px;--radius-4:8px;--radius-5:12px;--radius-6:16px;--radius-full:9999px;
+  --shadow-1:0 1px 2px 0 rgb(0 0 0/.05);--shadow-2:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1);--shadow-3:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);--shadow-4:0 10px 15px -3px rgb(0 0 0/.1);--shadow-5:0 20px 25px -5px rgb(0 0 0/.1);
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:32px;--space-8:40px;--space-9:48px;
+  --layout-sidebar-w:256px;--layout-header-h:64px;
+  --ease-out:cubic-bezier(.4,0,.2,1);--duration-fast:120ms;--duration-normal:200ms;--duration-slow:320ms;
+}
+[data-theme='dark']{
+  --background:hsl(210 20% 5%);--surface-1:hsl(210 15% 10%);--surface-2:hsl(210 10% 14%);
+  --foreground:hsl(240 10% 80%);--fg-muted:#a6a6a6;--fg-subtle:#7d7d8a;--border:hsl(210 10% 20%);--border-strong:hsl(210 10% 28%);
+  --primary:hsl(217 100% 64%);--primary-fg:hsl(210 20% 5%);--ring:hsl(217 100% 64%);--destructive:hsl(0 62% 50%);
+  --accent-1:#0a1f1c;--accent-2:#0f2a25;--accent-3:#143b32;--accent-4:#174c40;--accent-5:#1c5e4d;--accent-6:#21745d;--accent-7:#298d72;--accent-8:#2fa987;--accent-9:#86ead4;--accent-10:#9aefdc;--accent-11:#58d5b3;--accent-12:#c4f5e5;
+  --gray-1:#111113;--gray-2:#18191b;--gray-3:#212225;--gray-4:#272a2d;--gray-5:#2e3135;--gray-6:#363a3f;--gray-7:#43484e;--gray-8:#5a6169;--gray-9:#696e77;--gray-10:#777b84;--gray-11:#b0b4ba;--gray-12:#edeef0;
+  --status-success-bg:rgb(22 163 74/.18);--status-warning-bg:rgb(217 119 6/.18);--status-danger-bg:rgb(220 38 38/.18);--status-info-bg:rgb(37 99 235/.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--background);color:var(--foreground);font-size:var(--fs-base);line-height:var(--lh-normal);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent-8);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ══ 공통 셸 (모든 v2.0.0 화면 공유) ══ */
+.app{display:flex;min-height:100vh}
+.aside{width:var(--layout-sidebar-w);flex:none;position:sticky;top:0;height:100vh;background:var(--surface-1);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:var(--space-3)}
+.logo{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-2);font-size:var(--fs-md);font-weight:var(--fw-bold);letter-spacing:var(--ls-tight)}
+.logo .hex{width:26px;height:26px;display:grid;place-items:center;color:var(--accent-11)}
+.orgswitch{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin:var(--space-3) 0;padding:7px var(--space-3);border:1px solid var(--border);border-radius:var(--radius-3);font-size:var(--fs-sm);font-weight:var(--fw-medium);background:var(--surface-1)}
+.orgswitch .who{display:flex;align-items:center;gap:var(--space-2);min-width:0}
+.avatar{width:22px;height:22px;flex:none;border-radius:var(--radius-full);background:var(--accent-9);color:var(--accent-12);display:grid;place-items:center;font-size:var(--fs-xs);font-weight:var(--fw-bold)}
+.navgroup{margin-top:var(--space-4)}
+.navcap{font-size:11px;font-weight:var(--fw-medium);text-transform:uppercase;letter-spacing:var(--ls-caps);color:var(--gray-10);padding:0 var(--space-3);margin-bottom:var(--space-2)}
+.navitem{display:flex;align-items:center;gap:var(--space-2);padding:7px var(--space-3);border-radius:var(--radius-3);font-size:var(--fs-sm);color:var(--fg-muted);transition:background var(--duration-normal) var(--ease-out),color var(--duration-normal) var(--ease-out)}
+.navitem svg{flex:none;color:var(--gray-9)}
+.navitem:hover{background:var(--gray-2)}
+.navitem .cnt{margin-left:auto;font-size:10px;font-weight:var(--fw-semibold);padding:1px 6px;border-radius:var(--radius-full);background:var(--gray-3);color:var(--gray-11)}
+.navitem[aria-current="page"]{background:var(--accent-4);color:var(--accent-11);font-weight:var(--fw-semibold)}
+.navitem[aria-current="page"] svg{color:var(--accent-11)}
+.navitem[aria-current="page"] .cnt{background:var(--accent-9);color:var(--accent-12)}
+.aside .spacer{flex:1}
+.userblock{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-top:1px solid var(--border);margin-top:var(--space-2)}
+.userblock .avatar{width:28px;height:28px}
+.userblock .meta{min-width:0;font-size:var(--fs-sm);font-weight:var(--fw-medium)}
+.userblock .meta small{display:block;font-size:11px;color:var(--fg-muted);font-weight:var(--fw-regular)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:40;height:var(--layout-header-h);background:var(--surface-1);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6)}
+.crumb{display:flex;flex-direction:column;gap:2px;min-width:0}
+.crumb .path{font-size:11px;color:var(--fg-muted)}
+.crumb .now{font-size:var(--fs-lg);font-weight:var(--fw-semibold);letter-spacing:var(--ls-tight)}
+.topbar .spacer{flex:1}
+.hsearch{display:flex;align-items:center;gap:var(--space-2);width:220px;height:32px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--fg-muted);font-size:var(--fs-sm)}
+.hsearch input{border:0;background:none;outline:none;flex:1;font:inherit;color:var(--foreground)}
+.iconbtn{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--fg-muted)}
+.iconbtn:hover{background:var(--gray-2)}
+.topbar .avatar{width:30px;height:30px}
+
+.content{padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6);max-width:1400px;width:100%}
+
+/* ── 페이지 헤더 ── */
+.pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}
+.pagehead .title{font-size:22px;font-weight:var(--fw-bold);letter-spacing:var(--ls-tight)}
+.pagehead .desc{font-size:var(--fs-sm);color:var(--fg-muted);margin-top:4px}
+
+/* ── 버튼 ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border-radius:var(--radius-3);font-size:var(--fs-sm);font-weight:var(--fw-semibold);border:1px solid transparent;transition:background var(--duration-normal) var(--ease-out),border-color var(--duration-normal) var(--ease-out)}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-secondary{background:transparent;color:var(--gray-12);border-color:var(--gray-7)}
+.btn-secondary:hover{background:var(--gray-2)}
+.btn-quiet{background:none;border:none;color:var(--accent-11);font-size:var(--fs-xs);font-weight:var(--fw-semibold);height:auto;padding:0}
+
+/* ── 카드 ── */
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-4);padding:16px;display:flex;flex-direction:column;gap:10px}
+
+/* ── 필터 바 ── */
+.filterbar{gap:var(--space-3)}
+.filterrow{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap}
+.inp{display:flex;align-items:center;gap:var(--space-2);height:32px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--fg-muted);font-size:var(--fs-sm)}
+.inp.search{flex:1;min-width:220px}
+.inp input{border:0;background:none;outline:none;flex:1;font:inherit;color:var(--foreground)}
+select.sel{height:32px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--foreground);font:inherit;font-size:var(--fs-sm)}
+.chiprow{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:var(--radius-full);font-size:var(--fs-xs);font-weight:var(--fw-medium);border:1px solid var(--border);background:transparent;color:var(--gray-11)}
+.chip[aria-pressed="true"]{background:var(--accent-4);color:var(--accent-11);border-color:var(--accent-7)}
+.chip .x{color:inherit;background:none;border:none;font-size:13px;line-height:1;display:grid;place-items:center}
+
+.resultrow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--fs-sm);color:var(--fg-muted)}
+
+/* ── 레시피 카드 그리드 ── */
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--space-4)}
+.rcard{cursor:pointer;padding:0;overflow:hidden;transition:box-shadow var(--duration-normal) var(--ease-out),border-color var(--duration-normal) var(--ease-out)}
+.rcard:hover{box-shadow:var(--shadow-3);border-color:var(--border-strong)}
+.rthumb{aspect-ratio:16/10;background:var(--gray-3);display:grid;place-items:center;gap:6px;color:var(--gray-9);font-size:var(--fs-xs)}
+.rbody{padding:14px;display:flex;flex-direction:column;gap:9px}
+.rtitle{font-size:var(--fs-md);font-weight:var(--fw-semibold);letter-spacing:-0.01em;line-height:1.35}
+.rmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:var(--fs-xs);color:var(--fg-muted)}
+.tag{padding:2px 8px;border-radius:var(--radius-full);font-size:11px;font-weight:var(--fw-semibold);background:var(--gray-3);color:var(--gray-11)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--radius-full);font-size:11px;font-weight:var(--fw-semibold)}
+.badge-success{background:var(--status-success-bg);color:var(--status-success)}
+.badge-warning{background:var(--status-warning-bg);color:var(--status-warning)}
+
+/* ── 진행 바 (매칭률) ── */
+.matchrow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--fg-muted)}
+.track{flex:1;height:6px;border-radius:var(--radius-full);background:var(--gray-4);overflow:hidden}
+.fill{height:100%;border-radius:var(--radius-full)}
+
+/* ── 빈/상태 ── */
+.empty{border:1px dashed var(--border-strong);border-radius:var(--radius-4);padding:48px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--fg-muted)}
+.empty .ico{color:var(--gray-8)}
+.empty h3{font-size:var(--fs-md);font-weight:var(--fw-semibold);color:var(--foreground)}
+.empty p{font-size:var(--fs-sm)}
+.skel{background:var(--gray-3);border-radius:var(--radius-2);animation:pulse 1.2s var(--ease-out) infinite}
+@keyframes pulse{50%{opacity:.5}}
+
+/* ── 리뷰용 상태 구획 라벨 ── */
+.statelabel{font-size:11px;font-weight:var(--fw-semibold);text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--gray-10);margin-top:var(--space-4)}
+.note{background:var(--status-info-bg);color:var(--status-info);border-radius:var(--radius-3);padding:12px 14px;font-size:var(--fs-sm);line-height:var(--lh-snug)}
+
+@media(max-width:860px){.aside{display:none}}
+
+/* ══ 폼·편집형 전용 (recipe-form.html) ══ */
+.content.formscreen{max-width:900px}
+.btn-primary:disabled{opacity:.65;cursor:not-allowed;filter:none}
+.backlink{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);color:var(--fg-muted);width:fit-content}
+.backlink:hover{color:var(--foreground)}
+.cardhead{font-size:var(--fs-base);font-weight:var(--fw-semibold)}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-6);align-items:start}
+.formstack{display:flex;flex-direction:column;gap:var(--space-6)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:var(--fs-xs);font-weight:var(--fw-medium);color:var(--fg-muted)}
+.field .req{color:var(--status-danger)}
+.field input[type="text"],.field select{height:36px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--foreground);font:inherit;font-size:var(--fs-sm)}
+.field input[aria-invalid="true"]{border-color:var(--status-danger)}
+.field .errtext{font-size:11px;color:var(--status-danger)}
+.uploader{border:1px dashed var(--border-strong);border-radius:var(--radius-3);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--fg-muted);font-size:var(--fs-sm)}
+.uploader .ico{color:var(--gray-8)}
+.hint{font-size:11px;color:var(--fg-subtle)}
+.ingredient-row{display:grid;grid-template-columns:1fr 88px 26px;gap:var(--space-2);align-items:center}
+.ingredient-row .name{font-size:var(--fs-sm)}
+.ingredient-row input{height:32px;padding:0 8px;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--foreground);font:inherit;font-size:var(--fs-sm);text-align:center}
+.delbtn{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--border);border-radius:var(--radius-2);background:var(--surface-1);color:var(--fg-muted)}
+.delbtn:hover{background:var(--gray-2);color:var(--status-danger);border-color:var(--status-danger)}
+.picker-list{border:1px solid var(--border);border-radius:var(--radius-3);overflow:hidden;background:var(--surface-1)}
+.picker-item{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);padding:9px 12px;font-size:var(--fs-sm);border-bottom:1px solid var(--border)}
+.picker-item:last-child{border-bottom:none}
+.picker-item:hover{background:var(--gray-2)}
+.picker-item .meta{font-size:11px;color:var(--fg-muted)}
+.picker-item.new{color:var(--accent-11);font-weight:var(--fw-semibold)}
+.picker-item.new .meta{color:var(--accent-11);opacity:.75}
+.steps{display:flex;flex-direction:column;gap:var(--space-3)}
+.step{display:flex;gap:var(--space-3);align-items:flex-start}
+.stepno{width:22px;height:22px;flex:none;border-radius:var(--radius-full);background:var(--accent-4);color:var(--accent-11);display:grid;place-items:center;font-size:11px;font-weight:var(--fw-bold);margin-top:7px}
+.step textarea{flex:1;min-height:64px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-3);background:var(--surface-1);color:var(--foreground);font:inherit;font-size:var(--fs-sm);line-height:var(--lh-normal);resize:vertical}
+.tiplist{display:flex;flex-direction:column;gap:8px;list-style:none}
+.tiplist li{display:flex;gap:8px;font-size:var(--fs-sm);color:var(--fg-muted)}
+.tiplist li svg{flex:none;margin-top:2px;color:var(--accent-11)}
+.actionbar{position:sticky;bottom:0;background:var(--surface-1);border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:var(--space-3);padding:var(--space-4) 0}
+.alert-danger{background:var(--status-danger-bg);color:var(--status-danger);border-radius:var(--radius-3);padding:12px 14px;font-size:var(--fs-sm);font-weight:var(--fw-semibold);line-height:var(--lh-snug)}
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid color-mix(in srgb, currentColor 30%, transparent);border-top-color:currentColor;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app" data-theme="light">
+
+  <!-- ══════ 공통 사이드바 (모든 화면 공유) ══════ -->
+  <aside class="aside">
+    <div class="logo">
+      <span class="hex" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2 21 7v10l-9 5-9-5V7l9-5Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 11h8M9 11v4a3 3 0 0 0 6 0v-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </span>
+      레시피 상자
+    </div>
+    <div class="orgswitch">
+      <span class="who"><span class="avatar">C</span> chef@example.com</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </div>
+
+    <nav class="navgroup" aria-label="개요">
+      <div class="navcap">개요</div>
+      <a class="navitem" href="home.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 11 12 4l9 7M5 10v10h14V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>홈
+      </a>
+    </nav>
+    <nav class="navgroup" aria-label="요리">
+      <div class="navcap">요리</div>
+      <a class="navitem" href="recipe-list.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 5h16M4 12h16M4 19h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>레시피<span class="cnt tnum">3</span>
+      </a>
+      <a class="navitem" href="recipe-form.html" aria-current="page">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>새 레시피
+      </a>
+    </nav>
+    <nav class="navgroup" aria-label="식재료">
+      <div class="navcap">식재료</div>
+      <a class="navitem" href="ingredient-master.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>식재료 마스터<span class="cnt tnum">12</span>
+      </a>
+      <a class="navitem" href="inventory.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7 12 3l8 4v10l-8 4-8-4V7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>내 재고<span class="cnt tnum">4</span>
+      </a>
+    </nav>
+
+    <div class="spacer"></div>
+    <div class="userblock">
+      <span class="avatar">C</span>
+      <span class="meta">Chef<small>chef@example.com</small></span>
+    </div>
+  </aside>
+
+  <!-- ══════ 메인 ══════ -->
+  <div class="main">
+    <!-- 공통 헤더 -->
+    <header class="topbar">
+      <div class="crumb"><span class="path">요리</span><span class="now">새 레시피</span></div>
+      <div class="spacer"></div>
+      <div class="hsearch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><input placeholder="레시피·재료 검색"></div>
+      <button class="iconbtn" title="테마 전환" aria-label="테마 전환"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      <span class="avatar" title="chef@example.com">C</span>
+    </header>
+
+    <main class="content formscreen">
+      <!-- ← 뒤로 -->
+      <a class="backlink" href="recipe-list.html">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>뒤로
+      </a>
+
+      <!-- 페이지 헤더 (폼·편집형 골격) -->
+      <div class="pagehead">
+        <div>
+          <div class="title">새 레시피 등록</div>
+          <div class="desc">제목만 있으면 저장할 수 있어요. 재료는 마스터에서 연결합니다.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-2)">
+          <a class="btn btn-secondary" href="recipe-detail.html">취소</a>
+          <button class="btn btn-primary" type="submit">저장</button>
+        </div>
+      </div>
+
+      <div class="formgrid">
+        <!-- 좌: 폼 카드 스택 -->
+        <div class="formstack">
+          <!-- 기본 정보 -->
+          <section class="card" aria-label="기본 정보">
+            <div class="cardhead">기본 정보</div>
+            <div class="field">
+              <label for="f-title">제목 <span class="req">*</span></label>
+              <input id="f-title" type="text" value="기본 계란말이" required>
+            </div>
+            <div class="field">
+              <label for="f-cat">카테고리</label>
+              <select id="f-cat">
+                <option>선택 안 함</option>
+                <option selected>한식</option>
+                <option>양식</option>
+                <option>일식</option>
+                <option>디저트</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>대표 사진 (선택)</label>
+              <div class="uploader">
+                <span class="ico" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="10.5" r="1.6" stroke="currentColor" stroke-width="1.5"/><path d="m5 17 4.5-4 3.5 3 3-2.5L21 17" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+                <div>이미지를 끌어다 놓거나 <button class="btn btn-secondary" type="button" style="height:28px;padding:0 10px;font-size:12px">파일 선택</button></div>
+                <div class="hint">JPG/PNG · 최대 5MB · 없어도 저장됩니다</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 재료 연결 (US-009) -->
+          <section class="card" aria-label="재료 연결">
+            <div class="cardhead">재료 연결</div>
+            <div class="hint">마스터에 있는 재료를 검색해 선택하고 수량을 입력하세요.</div>
+
+            <div class="ingredient-row">
+              <span class="name">계란</span>
+              <input type="text" value="4개" aria-label="계란 수량">
+              <button class="delbtn" type="button" aria-label="계란 삭제"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+            </div>
+            <div class="ingredient-row">
+              <span class="name">대파</span>
+              <input type="text" value="1/2대" aria-label="대파 수량">
+              <button class="delbtn" type="button" aria-label="대파 삭제"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+            </div>
+
+            <div class="field">
+              <label for="ing-search">재료 추가</label>
+              <div class="inp search" style="height:36px">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <input id="ing-search" type="search" value="두" aria-expanded="true" aria-controls="ing-picker" placeholder="재료 이름 검색">
+              </div>
+            </div>
+            <div class="picker-list" id="ing-picker" role="listbox" aria-label="재료 검색 결과">
+              <div class="picker-item" role="option"><span>두부</span><span class="meta">가공식품 · 모</span></div>
+              <div class="picker-item" role="option"><span>두유</span><span class="meta">음료 · ml</span></div>
+              <div class="picker-item new" role="option"><span>+ &lsquo;두&rsquo;로 새 재료 만들기</span><span class="meta">마스터에 등록 후 연결</span></div>
+            </div>
+            <div class="note">마스터에 없는 재료명을 입력하면 &lsquo;새 재료 만들기&rsquo;가 제안됩니다(US-009 AC2).</div>
+          </section>
+
+          <!-- 조리 단계 -->
+          <section class="card" aria-label="조리 단계">
+            <div class="cardhead">조리 단계</div>
+            <div class="steps">
+              <div class="step">
+                <span class="stepno tnum">1</span>
+                <textarea aria-label="조리 단계 1">계란 4개를 볼에 풀고 소금으로 간한다.</textarea>
+              </div>
+              <div class="step">
+                <span class="stepno tnum">2</span>
+                <textarea aria-label="조리 단계 2">대파를 잘게 썰어 계란물에 섞는다.</textarea>
+              </div>
+            </div>
+            <button class="btn btn-secondary" type="button" style="align-self:flex-start">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>단계 추가
+            </button>
+          </section>
+        </div>
+
+        <!-- 우: 참조 정보 패널 -->
+        <aside class="card" aria-label="참조 정보">
+          <div class="cardhead">참조 정보</div>
+          <ul class="tiplist">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>제목은 필수입니다</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>사진은 없어도 저장됩니다</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>재료는 식재료 마스터에서만 연결됩니다</li>
+          </ul>
+          <div style="border-top:1px solid var(--border);padding-top:var(--space-3);display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-secondary" type="button" style="width:100%">임시 저장</button>
+          </div>
+          <div class="hint">수정 화면에서는 이 아래에 위험 영역(레시피 삭제)이 표시됩니다.</div>
+        </aside>
+      </div>
+
+      <!-- 하단 고정 액션 바 -->
+      <div class="actionbar">
+        <a class="btn btn-secondary" href="recipe-detail.html">취소</a>
+        <button class="btn btn-primary" type="submit">저장</button>
+      </div>
+
+      <!-- ═══ 상태 화면 (리뷰용) ═══ -->
+      <div class="statelabel">상태 A — 검증 오류: 제목 누락 (US-004 AC2)</div>
+      <div class="card" style="gap:14px">
+        <div class="alert-danger">저장하려면 아래 항목을 확인하세요</div>
+        <div class="field">
+          <label for="f-title-err">제목 <span class="req">*</span></label>
+          <input id="f-title-err" type="text" value="" aria-invalid="true" aria-describedby="f-title-err-msg">
+          <span id="f-title-err-msg" class="errtext">제목은 필수입니다.</span>
+        </div>
+      </div>
+
+      <div class="statelabel">상태 B — 저장 중 (로딩)</div>
+      <button class="btn btn-primary" type="button" disabled>
+        <span class="spinner" aria-hidden="true"></span>저장 중…
+      </button>
+
+      <div class="statelabel">상태 C — 비로그인 게이트 (US-003)</div>
+      <div class="note">레시피 등록/수정은 로그인 후 이용할 수 있습니다. 로그인 후 이 화면으로 복귀합니다(returnTo).</div>
+
+      <div class="statelabel">상태 D — 수정 권한 없음 (US-006 AC2)</div>
+      <div class="note" style="background:var(--status-danger-bg);color:var(--status-danger)">본인이 등록한 레시피만 수정할 수 있습니다. (서버 403)</div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

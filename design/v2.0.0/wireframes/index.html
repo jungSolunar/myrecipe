@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!-- v2.0.0 와이어프레임 인덱스 — 리뷰용 게이트웨이 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>레시피 상자 · v2.0.0 화면 인덱스</title>
+<style>
+:root{
+  --font-sans:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Roboto,sans-serif;
+  --background:hsl(210 20% 96%);--surface-1:#fff;--foreground:hsl(222 47% 11%);--fg-muted:hsl(215 20% 30%);
+  --border:hsl(210 20% 90%);--border-strong:hsl(215 20% 80%);--primary:hsl(219 99% 53%);
+  --accent-4:#c8f0e0;--accent-11:#007a5e;--accent-7:#7accac;--accent-9:#86ead4;--accent-12:#003d2e;
+  --gray-3:#eff0f3;--gray-9:#8b8d98;--gray-10:#80828d;--gray-11:#60646c;
+  --radius-3:6px;--radius-4:8px;--radius-full:9999px;--shadow-3:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;
+}
+[data-theme='dark']{--background:hsl(210 20% 5%);--surface-1:hsl(210 15% 10%);--foreground:hsl(240 10% 80%);--fg-muted:#a6a6a6;--border:hsl(210 10% 20%);--border-strong:hsl(210 10% 28%);--accent-4:#174c40;--accent-11:#58d5b3;--accent-12:#c4f5e5;--gray-3:#212225;--gray-9:#696e77;--gray-10:#777b84;--gray-11:#b0b4ba;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--background);color:var(--foreground);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:48px 24px 80px}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+h1{font-size:22px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:10px}
+.hex{color:var(--accent-11)}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full);background:var(--accent-4);color:var(--accent-11)}
+.desc{font-size:13px;color:var(--fg-muted);margin-bottom:32px;max-width:640px}
+.toggle{border:1px solid var(--border-strong);background:var(--surface-1);color:var(--fg-muted);border-radius:var(--radius-3);height:32px;padding:0 12px;font:inherit;font-size:13px;cursor:pointer}
+.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-10);margin:28px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.card{display:block;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-4);padding:16px;transition:box-shadow .2s,border-color .2s}
+.card:hover{box-shadow:var(--shadow-3);border-color:var(--border-strong)}
+.card .t{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.card .s{font-size:12px;color:var(--fg-muted);margin-top:4px}
+.card .k{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full);background:var(--gray-3);color:var(--gray-11)}
+.foot{margin-top:40px;font-size:12px;color:var(--fg-muted);border-top:1px solid var(--border);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap" data-theme="light" id="root">
+  <div class="head">
+    <h1><span class="hex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2 21 7v10l-9 5-9-5V7l9-5Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 11h8M9 11v4a3 3 0 0 0 6 0v-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span> 레시피 상자 <span class="tag">v2.0.0</span></h1>
+    <button class="toggle" onclick="var r=document.getElementById('root');r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">라이트 / 다크 전환</button>
+  </div>
+  <p class="desc">Radix mint accent + slate gray 기반 v2.0.0 화면 재구성. 규격서는 <a href="../design-guide.md" style="color:var(--accent-11);font-weight:600">design-guide.md</a>, 토큰은 <a href="../../tokens.css" style="color:var(--accent-11);font-weight:600">tokens.css</a>. 각 화면은 4상태(기본/로딩/빈/오류)를 포함하며 라이트·다크 두 테마를 지원합니다.</p>
+
+  <div class="cap">개요</div>
+  <div class="grid">
+    <a class="card" href="home.html"><div class="t">홈</div><div class="s">오늘 만들 수 있는 요리·임박 재료 요약</div><span class="k">대시보드형</span></a>
+  </div>
+
+  <div class="cap">요리</div>
+  <div class="grid">
+    <a class="card" href="recipe-list.html"><div class="t">레시피 목록</div><div class="s">검색·카테고리/재료 필터·매칭률</div><span class="k">목록·탐색형</span></a>
+    <a class="card" href="recipe-detail.html"><div class="t">레시피 상세</div><div class="s">재료·조리 순서·요약 액션 패널</div><span class="k">상세형</span></a>
+    <a class="card" href="recipe-form.html"><div class="t">레시피 등록/수정</div><div class="s">제목·사진·재료 연결·조리 단계</div><span class="k">폼·편집형</span></a>
+    <a class="card" href="recipe-list-recommend.html"><div class="t">레시피 추천 필터</div><div class="s">내 재고 기반 “만들 수 있는” 토글 (US-013)</div><span class="k">목록·탐색형</span></a>
+    <a class="card" href="recipe-delete-confirm.html"><div class="t">레시피 삭제 확인</div><div class="s">파괴적 동작 확인 다이얼로그</div><span class="k">모달</span></a>
+  </div>
+
+  <div class="cap">식재료</div>
+  <div class="grid">
+    <a class="card" href="ingredient-master.html"><div class="t">식재료 마스터</div><div class="s">표준 재료 사전 — 이름·분류·기본 단위</div><span class="k">목록·탐색형</span></a>
+    <a class="card" href="inventory.html"><div class="t">내 재고</div><div class="s">보유 수량·유통기한 D-day 관리</div><span class="k">목록·탐색형</span></a>
+  </div>
+
+  <div class="cap">계정</div>
+  <div class="grid">
+    <a class="card" href="login.html"><div class="t">로그인</div><div class="s">게이트 진입·실패·로그인됨 상태</div><span class="k">인증형</span></a>
+    <a class="card" href="signup.html"><div class="t">회원가입</div><div class="s">검증·중복·가입 성공 상태</div><span class="k">인증형</span></a>
+  </div>
+
+  <p class="foot">기존 산출물(<code>design/wireframes/</code>, <code>design/tokens.json</code>)은 legacy로 보존됩니다. 이 폴더는 v2.0.0 리뷰용 신규 산출물입니다. FE 구현은 이 디자인 확정 후 진행합니다.</p>
+</div>
+</body>
+</html>

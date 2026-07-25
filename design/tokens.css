@@ -1,0 +1,188 @@
+/*
+ * 레시피 상자 — Design Tokens (v2.0.0)
+ * 상위 시스템: E2E Test Runner Design System (Radix Themes mint accent + slate gray).
+ * 규격서: design/v2.0.0/design-guide.md
+ *
+ * 사용법:
+ *   1) <head>(helmet)에서 이 파일을 로드한다.
+ *   2) 최상위 래퍼에 data-theme="light|dark"를 건다. 다크 값은 토큰이 알아서 바뀐다.
+ *   3) 화면 코드는 리터럴 hex 대신 var(--*)만 쓴다. (예외: #fff 위 대비용 아이콘 fill)
+ *   4) 아래 99개 변수 밖의 토큰명을 추측하지 않는다 — 없으면 var()가 조용히 실패한다.
+ *
+ * 하위호환: 기존 design/tokens.json(emerald primary, mobile-first)은 legacy 자산으로 보존한다.
+ *           신규 화면은 이 tokens.css를 canonical 소스로 사용한다.
+ */
+
+:root {
+  /* ─── Typography ──────────────────────────────────────────── */
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+               'Apple SD Gothic Neo', 'Noto Sans KR', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'D2Coding', Consolas, 'Courier New', monospace;
+
+  --fs-xs:   12px;
+  --fs-sm:   13px;
+  --fs-base: 14px;   /* Radix size 2 — default body */
+  --fs-md:   15px;
+  --fs-lg:   16px;
+  --fs-xl:   18px;
+  --fs-2xl:  20px;
+  --fs-3xl:  24px;   /* KPI 값 — 화면에서 가장 큰 글자. 이보다 큰 타입 금지 */
+  --fs-4xl:  30px;
+  --fs-5xl:  36px;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  --lh-tight:  1.25;
+  --lh-snug:   1.4;
+  --lh-normal: 1.55;
+  --lh-loose:  1.7;
+
+  --ls-tight:  -0.02em;
+  --ls-normal: 0;
+  --ls-wide:   0.04em;
+  --ls-caps:   0.06em;
+
+  /* ─── Color foundations (light) — Clean SaaS ────────────────── */
+  --background:    hsl(210 20% 96%);   /* #F2F4F7 page */
+  --surface-1:     #ffffff;            /* white panels (card) */
+  --surface-2:     hsl(210 20% 90%);   /* #E4E7EB muted */
+  --foreground:    hsl(222 47% 11%);   /* #0F172A slate-900 */
+  --fg-muted:      hsl(215 20% 30%);   /* #475569 slate-600 */
+  --fg-subtle:     hsl(215 16% 47%);   /* slate-500 */
+  --border:        hsl(210 20% 90%);   /* #E4E7EB */
+  --border-strong: hsl(215 20% 80%);   /* #C1C9D4 */
+
+  --primary:     hsl(219 99% 53%);   /* indigo 600 — 액션(CTA). 누르는 것 */
+  --primary-fg:  #ffffff;
+  --ring:        hsl(219 99% 53%);
+  --destructive: hsl(0 84% 60%);
+
+  /* Radix mint accent (light) — 브랜드/서피스 강조. 지금 여기 */
+  --accent-1:  #fbfefd;
+  --accent-2:  #f2fbf7;
+  --accent-3:  #ddf7ed;
+  --accent-4:  #c8f0e0;   /* 활성 내비/칩 배경 */
+  --accent-5:  #b3e7d1;
+  --accent-6:  #9adcc0;
+  --accent-7:  #7accac;
+  --accent-8:  #4cba91;   /* 포커스 링 */
+  --accent-9:  #86ead4;   /* solid mint · 아바타 */
+  --accent-10: #7ae0c8;
+  --accent-11: #007a5e;   /* 활성 전경/텍스트 링크 */
+  --accent-12: #003d2e;
+
+  /* Radix slate gray (light) */
+  --gray-1:  #fcfcfd;
+  --gray-2:  #f9f9fb;   /* 행 hover, 표 헤더 */
+  --gray-3:  #eff0f3;   /* 중립 칩 배경 */
+  --gray-4:  #e7e8ec;   /* 진행바 트랙 */
+  --gray-5:  #e0e1e6;
+  --gray-6:  #d8d9e0;
+  --gray-7:  #cdced7;   /* 보조 버튼 테두리 */
+  --gray-8:  #b9bbc6;
+  --gray-9:  #8b8d98;   /* 플레이스홀더/아이콘 */
+  --gray-10: #80828d;   /* ALL CAPS 그룹 캡션 */
+  --gray-11: #60646c;   /* 중립 칩 전경 */
+  --gray-12: #1c2024;
+
+  /* Semantic status (light) — 의미 고정 */
+  --status-success:   #16a34a;  /* emerald-600 · 보유·완성 가능 */
+  --status-success-bg:#dcfce7;
+  --status-warning:   #d97706;  /* amber-600 · 임박·부족·주의 */
+  --status-warning-bg:#fef3c7;
+  --status-danger:    #dc2626;  /* red-600 · 만료·오류·파괴적 */
+  --status-danger-bg: #fee2e2;
+  --status-info:      #2563eb;  /* blue-600 · 정보·안내 */
+  --status-info-bg:   #dbeafe;
+  --status-running:   #2563eb;
+  --status-flaky:     #d97706;
+
+  /* ─── Radius / Elevation / Spacing ──────────────────────────── */
+  --radius-1: 3px;
+  --radius-2: 4px;
+  --radius-3: 6px;     /* 버튼·입력·작은 컨트롤 */
+  --radius-4: 8px;     /* 카드/패널 (default --radius) */
+  --radius-5: 12px;    /* 페이지 레벨 큰 컨테이너 */
+  --radius-6: 16px;
+  --radius-full: 9999px; /* 배지·칩·아바타 */
+
+  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-2: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-3: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* 클릭 가능 카드 hover */
+  --shadow-4: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-5: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;   /* 섹션 간 */
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+
+  --layout-sidebar-w: 256px;
+  --layout-sidebar-collapsed-w: 64px;
+  --layout-header-h: 64px;
+
+  /* Motion — box-shadow / border-color / background-color 에만 적용 */
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:    120ms;
+  --duration-normal:  200ms;
+  --duration-slow:    320ms;
+}
+
+[data-theme='dark'] {
+  --background:    hsl(210 20% 5%);    /* #0B0C0E page */
+  --surface-1:     hsl(210 15% 10%);   /* #181B1F panels */
+  --surface-2:     hsl(210 10% 14%);
+  --foreground:    hsl(240 10% 80%);   /* #CCCCDC */
+  --fg-muted:      #a6a6a6;
+  --fg-subtle:     #7d7d8a;
+  --border:        hsl(210 10% 20%);   /* #2C3235 */
+  --border-strong: hsl(210 10% 28%);
+
+  --primary:     hsl(217 100% 64%);  /* indigo 500 dark */
+  --primary-fg:  hsl(210 20% 5%);
+  --ring:        hsl(217 100% 64%);
+  --destructive: hsl(0 62% 50%);
+
+  /* Radix mint (dark) */
+  --accent-1:  #0a1f1c;
+  --accent-2:  #0f2a25;
+  --accent-3:  #143b32;
+  --accent-4:  #174c40;
+  --accent-5:  #1c5e4d;
+  --accent-6:  #21745d;
+  --accent-7:  #298d72;
+  --accent-8:  #2fa987;
+  --accent-9:  #86ead4;
+  --accent-10: #9aefdc;
+  --accent-11: #58d5b3;
+  --accent-12: #c4f5e5;
+
+  /* Radix slate (dark) */
+  --gray-1:  #111113;
+  --gray-2:  #18191b;
+  --gray-3:  #212225;
+  --gray-4:  #272a2d;
+  --gray-5:  #2e3135;
+  --gray-6:  #363a3f;
+  --gray-7:  #43484e;
+  --gray-8:  #5a6169;
+  --gray-9:  #696e77;
+  --gray-10: #777b84;
+  --gray-11: #b0b4ba;
+  --gray-12: #edeef0;
+
+  /* Semantic status bg (dark) — 전경 색은 light와 동일 */
+  --status-success-bg:rgb(22 163 74 / 0.18);
+  --status-warning-bg:rgb(217 119 6 / 0.18);
+  --status-danger-bg: rgb(220 38 38 / 0.18);
+  --status-info-bg:   rgb(37 99 235 / 0.18);
+}

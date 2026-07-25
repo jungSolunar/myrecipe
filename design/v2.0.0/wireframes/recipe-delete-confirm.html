@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!-- US-007 레시피 삭제 확인 (파괴적 액션 다이얼로그) -->
+<!-- skeleton: 모달·확인형 / v2.0.0 · 레시피 상자 디자인 시스템 (Radix mint + slate) -->
+<!-- 기준: design/v2.0.0/design-guide.md §4.4 위험 영역 톤 · design/tokens.css. -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>레시피 삭제 확인 · 레시피 상자</title>
+<style>
+/* ── tokens.css (v2.0.0) 인라인: 리뷰용 단일 파일화. 값 변경 금지 ── */
+:root{
+  --font-sans:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Roboto,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code','D2Coding',Consolas,monospace;
+  --fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:16px;--fs-xl:18px;--fs-2xl:20px;--fs-3xl:24px;--fs-4xl:30px;--fs-5xl:36px;
+  --fw-regular:400;--fw-medium:500;--fw-semibold:600;--fw-bold:700;
+  --lh-tight:1.25;--lh-snug:1.4;--lh-normal:1.55;--lh-loose:1.7;
+  --ls-tight:-0.02em;--ls-normal:0;--ls-wide:0.04em;--ls-caps:0.06em;
+  --background:hsl(210 20% 96%);--surface-1:#fff;--surface-2:hsl(210 20% 90%);
+  --foreground:hsl(222 47% 11%);--fg-muted:hsl(215 20% 30%);--fg-subtle:hsl(215 16% 47%);
+  --border:hsl(210 20% 90%);--border-strong:hsl(215 20% 80%);
+  --primary:hsl(219 99% 53%);--primary-fg:#fff;--ring:hsl(219 99% 53%);--destructive:hsl(0 84% 60%);
+  --accent-1:#fbfefd;--accent-2:#f2fbf7;--accent-3:#ddf7ed;--accent-4:#c8f0e0;--accent-5:#b3e7d1;--accent-6:#9adcc0;--accent-7:#7accac;--accent-8:#4cba91;--accent-9:#86ead4;--accent-10:#7ae0c8;--accent-11:#007a5e;--accent-12:#003d2e;
+  --gray-1:#fcfcfd;--gray-2:#f9f9fb;--gray-3:#eff0f3;--gray-4:#e7e8ec;--gray-5:#e0e1e6;--gray-6:#d8d9e0;--gray-7:#cdced7;--gray-8:#b9bbc6;--gray-9:#8b8d98;--gray-10:#80828d;--gray-11:#60646c;--gray-12:#1c2024;
+  --status-success:#16a34a;--status-success-bg:#dcfce7;--status-warning:#d97706;--status-warning-bg:#fef3c7;--status-danger:#dc2626;--status-danger-bg:#fee2e2;--status-info:#2563eb;--status-info-bg:#dbeafe;--status-running:#2563eb;--status-flaky:#d97706;
+  --radius-1:3px;--radius-2:4px;--radius-3:6px;--radius-4:8px;--radius-5:12px;--radius-6:16px;--radius-full:9999px;
+  --shadow-1:0 1px 2px 0 rgb(0 0 0/.05);--shadow-2:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1);--shadow-3:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);--shadow-4:0 10px 15px -3px rgb(0 0 0/.1);--shadow-5:0 20px 25px -5px rgb(0 0 0/.1);
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:32px;--space-8:40px;--space-9:48px;
+  --layout-sidebar-w:256px;--layout-header-h:64px;
+  --ease-out:cubic-bezier(.4,0,.2,1);--duration-fast:120ms;--duration-normal:200ms;--duration-slow:320ms;
+}
+[data-theme='dark']{
+  --background:hsl(210 20% 5%);--surface-1:hsl(210 15% 10%);--surface-2:hsl(210 10% 14%);
+  --foreground:hsl(240 10% 80%);--fg-muted:#a6a6a6;--fg-subtle:#7d7d8a;--border:hsl(210 10% 20%);--border-strong:hsl(210 10% 28%);
+  --primary:hsl(217 100% 64%);--primary-fg:hsl(210 20% 5%);--ring:hsl(217 100% 64%);--destructive:hsl(0 62% 50%);
+  --accent-1:#0a1f1c;--accent-2:#0f2a25;--accent-3:#143b32;--accent-4:#174c40;--accent-5:#1c5e4d;--accent-6:#21745d;--accent-7:#298d72;--accent-8:#2fa987;--accent-9:#86ead4;--accent-10:#9aefdc;--accent-11:#58d5b3;--accent-12:#c4f5e5;
+  --gray-1:#111113;--gray-2:#18191b;--gray-3:#212225;--gray-4:#272a2d;--gray-5:#2e3135;--gray-6:#363a3f;--gray-7:#43484e;--gray-8:#5a6169;--gray-9:#696e77;--gray-10:#777b84;--gray-11:#b0b4ba;--gray-12:#edeef0;
+  --status-success-bg:rgb(22 163 74/.18);--status-warning-bg:rgb(217 119 6/.18);--status-danger-bg:rgb(220 38 38/.18);--status-info-bg:rgb(37 99 235/.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--background);color:var(--foreground);font-size:var(--fs-base);line-height:var(--lh-normal);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent-8);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ── 버튼 ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 14px;border-radius:var(--radius-3);font-size:var(--fs-sm);font-weight:var(--fw-semibold);border:1px solid transparent;transition:background var(--duration-normal) var(--ease-out),border-color var(--duration-normal) var(--ease-out)}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-secondary{background:transparent;color:var(--gray-12);border-color:var(--gray-7)}
+.btn-secondary:hover{background:var(--gray-2)}
+.btn-quiet{background:none;border:none;color:var(--accent-11);font-size:var(--fs-xs);font-weight:var(--fw-semibold);height:auto;padding:0}
+
+/* ── 카드 ── */
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-4);padding:16px;display:flex;flex-direction:column;gap:10px}
+
+/* ── 리뷰용 상태 구획 라벨 ── */
+.statelabel{font-size:11px;font-weight:var(--fw-semibold);text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--gray-10);margin-top:var(--space-4)}
+.note{background:var(--status-info-bg);color:var(--status-info);border-radius:var(--radius-3);padding:12px 14px;font-size:var(--fs-sm);line-height:var(--lh-snug)}
+
+/* ══ 이 화면 전용: 확인 모달 다이얼로그 (US-007) ══ */
+.page{min-height:100vh;display:flex;justify-content:center;padding:var(--space-6) 0}
+.stage{max-width:1200px;width:100%;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6)}
+.stage-desc{font-size:var(--fs-sm);color:var(--fg-muted);max-width:640px}
+
+/* 배경 스크림(딤 처리) 패널 — 실제 fixed 오버레이 대신 리뷰용 인라인 패널로 표현 */
+.backdrop{background:rgb(0 0 0/.45);border-radius:var(--radius-5);display:grid;place-items:center;padding:40px}
+
+.dialog{background:var(--surface-1);border-radius:var(--radius-5);box-shadow:var(--shadow-5);max-width:420px;width:100%;padding:24px;display:flex;flex-direction:column;gap:var(--space-4)}
+.warnicon{width:40px;height:40px;flex:none;border-radius:var(--radius-full);background:var(--status-danger-bg);color:var(--status-danger);display:grid;place-items:center}
+.dialog h1{font-size:var(--fs-xl);font-weight:var(--fw-semibold);letter-spacing:var(--ls-tight)}
+.dialog p{font-size:var(--fs-base);color:var(--fg-muted);line-height:var(--lh-normal)}
+.dialog-actions{display:flex;justify-content:flex-end;gap:var(--space-2);margin-top:var(--space-2)}
+
+/* Danger 솔리드 버튼 — 삭제 확정 액션 전용 */
+.btn-danger{background:var(--status-danger);color:#fff;border-color:var(--status-danger)}
+.btn-danger:hover{filter:brightness(1.05)}
+.btn:disabled{opacity:.55;cursor:not-allowed;filter:none}
+
+/* 스피너 (버튼 내 로딩 인디케이터) */
+.spinner{width:14px;height:14px;border-radius:var(--radius-full);border:2px solid rgb(255 255 255/.4);border-top-color:#fff;animation:spin .6s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 성공 토스트 */
+.toast{display:flex;align-items:center;gap:var(--space-3);background:var(--status-success-bg);color:var(--status-success);border:1px solid var(--status-success);border-radius:var(--radius-4);padding:14px 16px;font-size:var(--fs-sm);line-height:var(--lh-snug);max-width:420px}
+.toast .ico{flex:none;display:grid;place-items:center}
+.toast strong{color:inherit}
+
+@media(max-width:480px){
+  .backdrop{padding:0;align-items:flex-end}
+  .dialog{max-width:100%;border-radius:var(--radius-5) var(--radius-5) 0 0;box-shadow:var(--shadow-4)}
+}
+</style>
+</head>
+<body>
+<div class="page" data-theme="light">
+  <div class="stage">
+
+    <div>
+      <div class="statelabel" style="margin-top:0">기본 상태 — 삭제 확인 모달</div>
+      <p class="stage-desc" style="margin-top:4px">레시피 카드/상세 화면의 “삭제” 버튼을 누르면 배경을 딤 처리하고 이 다이얼로그를 띄운다. 포커스는 다이얼로그 내부에 트랩되며 기본 포커스는 취소 버튼에 둔다.</p>
+    </div>
+
+    <!-- ══════ 기본 상태 ══════ -->
+    <div class="backdrop">
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-desc">
+        <span class="warnicon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m3 0-.9 12.1A2 2 0 0 1 15.1 21H8.9a2 2 0 0 1-2-1.9L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </span>
+        <h1 id="dlg-title">레시피를 삭제할까요?</h1>
+        <p id="dlg-desc"><strong style="color:var(--foreground);font-weight:var(--fw-semibold)">“기본 계란말이”</strong> 레시피가 목록에서 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</p>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" autofocus>취소</button>
+          <button class="btn btn-danger">삭제</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 상태 화면 (리뷰용) ═══ -->
+    <div class="statelabel">상태 A — 삭제 중 (loading)</div>
+    <div class="backdrop">
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title-a" aria-describedby="dlg-desc-a">
+        <span class="warnicon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m3 0-.9 12.1A2 2 0 0 1 15.1 21H8.9a2 2 0 0 1-2-1.9L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </span>
+        <h1 id="dlg-title-a">레시피를 삭제할까요?</h1>
+        <p id="dlg-desc-a"><strong style="color:var(--foreground);font-weight:var(--fw-semibold)">“기본 계란말이”</strong> 레시피가 목록에서 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</p>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" disabled>취소</button>
+          <button class="btn btn-danger" disabled aria-busy="true"><span class="spinner" aria-hidden="true"></span>삭제 중…</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="statelabel">상태 B — 삭제 완료 → 목록으로 (toast)</div>
+    <div class="toast" role="status" aria-live="polite">
+      <span class="ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="m8.5 12.3 2.4 2.4 4.6-5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><strong>“기본 계란말이”</strong>를 삭제했습니다. 레시피 목록으로 이동합니다.</span>
+    </div>
+
+    <div class="statelabel">상태 C — 권한 없음 (US-007 AC2)</div>
+    <div class="note" style="background:var(--status-danger-bg);color:var(--status-danger)">본인이 등록한 레시피만 삭제할 수 있습니다. (서버 403) 비로그인은 로그인 게이트로 유도.</div>
+
+    <div class="statelabel">참고 — 반응형/구현</div>
+    <div class="note">모바일에서는 하단 시트(bottom-sheet) 변형 허용. 배경 스크롤 잠금, ESC/취소로 닫힘, 삭제 버튼은 danger 색으로 명확히 구분. 포커스는 다이얼로그 내부 트랩.</div>
+
+  </div>
+</div>
+</body>
+</html>
