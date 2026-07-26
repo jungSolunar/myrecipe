@@ -14,7 +14,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from . import db as dbmod
 from .config import settings
 from .errors import AppError, app_error_handler, error_body
-from .routers import auth, ingredients, inventory, recipes, uploads
+from .routers import auth, dashboard, ingredients, inventory, ratings, recipes, uploads
 
 
 @asynccontextmanager
@@ -30,7 +30,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="레시피 & 식재료 관리 API", version="1.0.0", lifespan=lifespan)
 
 API_PREFIX = "/api/v1"
-for r in (auth.router, recipes.router, ingredients.router, inventory.router, uploads.router):
+for r in (auth.router, recipes.router, ratings.router, dashboard.router,
+          ingredients.router, inventory.router, uploads.router):
     app.include_router(r, prefix=API_PREFIX)
 
 

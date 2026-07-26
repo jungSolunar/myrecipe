@@ -2,6 +2,7 @@
 
 전 회원 공용이 아니라 회원 개인별 목록이므로 목록 조회부터 로그인이 필요하다.
 """
+import json
 import sqlite3
 from typing import Optional
 
@@ -17,10 +18,21 @@ from ..schemas import Ingredient, IngredientListResponse, IngredientWriteRequest
 router = APIRouter(tags=["ingredients"])
 
 
+def _aliases_to_json(aliases) -> Optional[str]:
+    """[US-016] 별칭 리스트를 JSON 문자열로 직렬화. 빈 값/None 은 NULL 저장."""
+    return json.dumps(aliases, ensure_ascii=False) if aliases else None
+
+
 def _out(row: sqlite3.Row) -> Ingredient:
+    raw = row["aliases_json"]
     return Ingredient(
         id=row["id"], name=row["name"], category=row["category"],
-        default_unit=row["default_unit"], owner_id=row["owner_id"],
+        default_unit=row["default_unit"],
+        aliases=json.loads(raw) if raw else [],
+        kcal_per_100g=row["kcal_per_100g"],
+        default_storage=row["default_storage"],
+        memo=row["memo"],
+        owner_id=row["owner_id"],
         created_at=row["created_at"], updated_at=row["updated_at"],
     )
 
@@ -62,7 +74,9 @@ def list_ingredients(
     where = ["owner_id = ?", "deleted_at IS NULL"]
     params: list = [user["id"]]
     if q:
-        where.append("name LIKE ?")
+        # [US-016] 재료명뿐 아니라 별칭(aliases_json)도 LIKE 매칭(별칭 검색). 소규모 기준.
+        where.append("(name LIKE ? OR aliases_json LIKE ?)")
+        params.append(f"%{q}%")
         params.append(f"%{q}%")
     if category:
         where.append("category = ?")
@@ -89,9 +103,11 @@ def create_ingredient(body: IngredientWriteRequest, db: sqlite3.Connection = Dep
     now = utcnow()
     iid = new_id("ing")
     db.execute(
-        "INSERT INTO ingredients(id, name, category, default_unit, owner_id, created_at, updated_at) "
-        "VALUES (?,?,?,?,?,?,?)",
-        (iid, body.name, body.category, body.default_unit, user["id"], now, now),
+        "INSERT INTO ingredients(id, name, category, default_unit, aliases_json, kcal_per_100g, "
+        "default_storage, memo, owner_id, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (iid, body.name, body.category, body.default_unit, _aliases_to_json(body.aliases),
+         body.kcal_per_100g, body.default_storage, body.memo, user["id"], now, now),
     )
     db.commit()
     return _out(db.execute("SELECT * FROM ingredients WHERE id=?", (iid,)).fetchone())
@@ -111,8 +127,10 @@ def update_ingredient(ingredientId: str, body: IngredientWriteRequest,
         raise _name_exists_error()
     now = utcnow()
     db.execute(
-        "UPDATE ingredients SET name=?, category=?, default_unit=?, updated_at=? WHERE id=?",
-        (body.name, body.category, body.default_unit, now, ingredientId),
+        "UPDATE ingredients SET name=?, category=?, default_unit=?, aliases_json=?, "
+        "kcal_per_100g=?, default_storage=?, memo=?, updated_at=? WHERE id=?",
+        (body.name, body.category, body.default_unit, _aliases_to_json(body.aliases),
+         body.kcal_per_100g, body.default_storage, body.memo, now, ingredientId),
     )
     db.commit()
     return _out(db.execute("SELECT * FROM ingredients WHERE id=?", (ingredientId,)).fetchone())

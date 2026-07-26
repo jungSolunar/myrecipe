@@ -22,6 +22,7 @@ def _out(row: sqlite3.Row) -> InventoryItem:
     return InventoryItem(
         id=row["id"], ingredient_id=row["ingredient_id"], ingredient_name=row["ing_name"],
         quantity=row["quantity"], unit=row["unit"], expires_at=row["expires_at"],
+        storage_location=row["storage_location"],
         owner_id=row["owner_id"], created_at=row["created_at"], updated_at=row["updated_at"],
     )
 
@@ -71,9 +72,10 @@ def create_inventory(body: InventoryWriteRequest, db: sqlite3.Connection = Depen
     now = utcnow()
     iid = new_id("inv")
     db.execute(
-        "INSERT INTO inventory_items(id, ingredient_id, owner_id, quantity, unit, expires_at, created_at, updated_at) "
-        "VALUES (?,?,?,?,?,?,?,?)",
-        (iid, body.ingredient_id, user["id"], body.quantity, body.unit, body.expires_at, now, now),
+        "INSERT INTO inventory_items(id, ingredient_id, owner_id, quantity, unit, expires_at, storage_location, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (iid, body.ingredient_id, user["id"], body.quantity, body.unit, body.expires_at,
+         body.storage_location, now, now),
     )
     db.commit()
     return _out(_fetch(db, iid))
@@ -90,8 +92,8 @@ def update_inventory(inventoryId: str, body: InventoryWriteRequest,
     _require_owned_ingredient(db, body.ingredient_id, user["id"])
     now = utcnow()
     db.execute(
-        "UPDATE inventory_items SET ingredient_id=?, quantity=?, unit=?, expires_at=?, updated_at=? WHERE id=?",
-        (body.ingredient_id, body.quantity, body.unit, body.expires_at, now, inventoryId),
+        "UPDATE inventory_items SET ingredient_id=?, quantity=?, unit=?, expires_at=?, storage_location=?, updated_at=? WHERE id=?",
+        (body.ingredient_id, body.quantity, body.unit, body.expires_at, body.storage_location, now, inventoryId),
     )
     db.commit()
     return _out(_fetch(db, inventoryId))

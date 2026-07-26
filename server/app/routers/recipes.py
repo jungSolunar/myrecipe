@@ -21,6 +21,7 @@ from ..schemas import (
     RecipeIngredient,
     RecipeListItem,
     RecipeListResponse,
+    RecipeRating,
     RecipeWriteRequest,
 )
 
@@ -45,6 +46,21 @@ class RecipeListResponseV2(BaseModel):
 # --------------------------------------------------------------------------
 # 직렬화 헬퍼
 # --------------------------------------------------------------------------
+def _recipe_rating(db: sqlite3.Connection, recipe_id: str) -> RecipeRating:
+    """[US-015] 레시피의 회원별 평점 집계(활성 행 AVG/COUNT). 평가 0건이면 average=None, count=0.
+
+    비로그인 응답에도 포함되는 공개 정보(2026-07-26 사용자 결정).
+    """
+    row = db.execute(
+        "SELECT AVG(score) AS avg, COUNT(*) AS cnt FROM recipe_ratings "
+        "WHERE recipe_id = ? AND deleted_at IS NULL",
+        (recipe_id,),
+    ).fetchone()
+    cnt = row["cnt"] or 0
+    avg = round(row["avg"], 2) if row["avg"] is not None else None
+    return RecipeRating(average=avg, count=cnt)
+
+
 def _load_recipe_ingredients(db: sqlite3.Connection, recipe_id: str) -> List[sqlite3.Row]:
     return db.execute(
         "SELECT ri.*, i.name AS ing_name FROM recipe_ingredients ri "
@@ -147,6 +163,8 @@ def _recipe_detail(db: sqlite3.Connection, row: sqlite3.Row, current_user: Optio
         steps=json.loads(row["steps_json"]),
         ingredients=ingredients,
         ingredient_availability=availability,
+        cook_time_minutes=row["cook_time_minutes"],
+        rating=_recipe_rating(db, row["id"]),
         owner_id=row["owner_id"],
         is_owner=bool(current_user and current_user["id"] == row["owner_id"]),
         created_at=row["created_at"],
@@ -195,10 +213,14 @@ def _validate_and_write_ingredients(db: sqlite3.Connection, recipe_id: str,
 # --------------------------------------------------------------------------
 # 엔드포인트
 # --------------------------------------------------------------------------
-def _list_item(r: sqlite3.Row, missing_count: Optional[int]) -> RecipeListItemV2:
+def _list_item(db: sqlite3.Connection, r: sqlite3.Row, missing_count: Optional[int],
+               rating: Optional[RecipeRating] = None) -> RecipeListItemV2:
     return RecipeListItemV2(
         id=r["id"], title=r["title"], category=r["category"], photo_url=r["photo_url"],
-        ingredient_count=r["ingredient_count"], owner_id=r["owner_id"],
+        ingredient_count=r["ingredient_count"],
+        cook_time_minutes=r["cook_time_minutes"],
+        rating=rating if rating is not None else _recipe_rating(db, r["id"]),
+        owner_id=r["owner_id"],
         created_at=r["created_at"], updated_at=r["updated_at"],
         missing_count=missing_count,
     )
@@ -258,10 +280,14 @@ def list_recipes(
         f"FROM recipes r WHERE {' AND '.join(where)} "
     )
 
-    # 추천 모드는 로그인 사용자에게만 의미가 있다. 비로그인은 no-op(기본 경로).
+    # 전체-계산 경로가 필요한 정렬:
+    #   - available_only / missing_asc: 로그인 사용자 재고 기반(US-013). 비로그인은 no-op(기본 경로).
+    #   - cook_time_asc / rating_desc(US-014/015): 재고와 무관한 레시피 속성 정렬. 값 없는 항목은 뒤로.
+    #     id 기반 커서와 정렬 키가 충돌하므로 전체를 계산·정렬 후 커서 id 를 위치 마커로 사용한다.
     recommend = current_user is not None and (available_only or sort == "missing_asc")
+    computed = recommend or sort in ("cook_time_asc", "rating_desc")
 
-    if not recommend:
+    if not computed:
         # ---- 기본 경로(기존 동작 완전 보존): id 내림차순 + 커서 id<? ----
         cursor_id = decode_cursor(cursor)
         params2 = list(params)
@@ -277,34 +303,45 @@ def list_recipes(
         rows = rows[:limit]
         uid = current_user["id"] if current_user is not None else None
         data = [
-            _list_item(r, _missing_count(db, uid, r["id"]) if uid else None)
+            _list_item(db, r, _missing_count(db, uid, r["id"]) if uid else None)
             for r in rows
         ]
         next_cursor = encode_cursor(rows[-1]["id"]) if has_more and rows else None
         return RecipeListResponseV2(data=data, next_cursor=next_cursor, has_more=has_more)
 
-    # ---- 추천 모드(로그인 + available_only/missing_asc): 전체 계산 후 정렬·페이지네이션 ----
-    uid = current_user["id"]
-    all_rows = db.execute(select_prefix + "ORDER BY r.id DESC", params).fetchall()
-    enriched = [(r, _missing_count(db, uid, r["id"])) for r in all_rows]  # 이미 id desc
+    # ---- 전체-계산 경로: 매칭 대상 전체를 계산·정렬한 뒤 커서 id 위치로 페이지네이션 ----
+    uid = current_user["id"] if current_user is not None else None
+    all_rows = db.execute(select_prefix + "ORDER BY r.id DESC", params).fetchall()  # id desc
+    # (row, missing_count|None, rating) 로 enrich
+    enriched = [
+        (r, (_missing_count(db, uid, r["id"]) if uid else None), _recipe_rating(db, r["id"]))
+        for r in all_rows
+    ]
 
-    if available_only:
+    # available_only 는 로그인 사용자에게만 의미(비로그인은 no-op).
+    if available_only and uid:
         enriched = [e for e in enriched if e[1] == 0]
-    if sort == "missing_asc":
-        # 안정 정렬: missing_count 오름차순, 동률은 기존 id desc 순서 유지.
+
+    # 안정 정렬(파이썬 sort 는 stable) → 동률은 기존 id desc 순서 유지. 값 없는 항목은 뒤로.
+    if sort == "missing_asc" and uid:
         enriched.sort(key=lambda e: e[1])
+    elif sort == "cook_time_asc":
+        enriched.sort(key=lambda e: (e[0]["cook_time_minutes"] is None,
+                                     e[0]["cook_time_minutes"] or 0))
+    elif sort == "rating_desc":
+        enriched.sort(key=lambda e: (e[2].average is None, -(e[2].average or 0)))
 
     start = 0
     cursor_id = decode_cursor(cursor)
     if cursor_id:
-        for idx, (r, _) in enumerate(enriched):
+        for idx, (r, _mc, _rt) in enumerate(enriched):
             if r["id"] == cursor_id:
                 start = idx + 1
                 break
     window = enriched[start:start + limit + 1]
     has_more = len(window) > limit
     window = window[:limit]
-    data = [_list_item(r, mc) for r, mc in window]
+    data = [_list_item(db, r, mc, rating=rt) for r, mc, rt in window]
     next_cursor = encode_cursor(window[-1][0]["id"]) if has_more and window else None
     return RecipeListResponseV2(data=data, next_cursor=next_cursor, has_more=has_more)
 
@@ -315,10 +352,10 @@ def create_recipe(body: RecipeWriteRequest, db: sqlite3.Connection = Depends(get
     now = utcnow()
     rid = new_id("rcp")
     db.execute(
-        "INSERT INTO recipes(id, title, category, description, photo_url, steps_json, owner_id, created_at, updated_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO recipes(id, title, category, description, photo_url, steps_json, cook_time_minutes, owner_id, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)",
         (rid, body.title, body.category, body.description, body.photo_url,
-         json.dumps(body.steps, ensure_ascii=False), user["id"], now, now),
+         json.dumps(body.steps, ensure_ascii=False), body.cook_time_minutes, user["id"], now, now),
     )
     _validate_and_write_ingredients(db, rid, user["id"], body)
     db.commit()
@@ -341,10 +378,10 @@ def update_recipe(recipeId: str, body: RecipeWriteRequest, db: sqlite3.Connectio
         raise forbidden()
     now = utcnow()
     db.execute(
-        "UPDATE recipes SET title=?, category=?, description=?, photo_url=?, steps_json=?, updated_at=? "
+        "UPDATE recipes SET title=?, category=?, description=?, photo_url=?, steps_json=?, cook_time_minutes=?, updated_at=? "
         "WHERE id=?",
         (body.title, body.category, body.description, body.photo_url,
-         json.dumps(body.steps, ensure_ascii=False), now, recipeId),
+         json.dumps(body.steps, ensure_ascii=False), body.cook_time_minutes, now, recipeId),
     )
     _validate_and_write_ingredients(db, recipeId, user["id"], body)
     db.commit()
