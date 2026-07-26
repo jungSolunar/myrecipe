@@ -2,9 +2,20 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../../api';
 import type { RecipeIngredient } from '../../api/types';
-import { Alert, Badge, ConfirmDialog, ErrorState, Icon, Toast } from '../../components';
+import {
+  Alert,
+  Badge,
+  Button,
+  ConfirmDialog,
+  ErrorState,
+  Icon,
+  RatingStars,
+  Toast,
+} from '../../components';
 import { useAuth } from '../auth/useAuth';
-import { useDeleteRecipe, useRecipeDetail } from './useRecipes';
+import { MatchProgress } from './MatchProgress';
+import { RatingInput } from './RatingInput';
+import { useDeleteRating, useDeleteRecipe, useRecipeDetail, useSetRating } from './useRecipes';
 import './recipes.css';
 
 function statusBadge(status: RecipeIngredient['status']) {
@@ -20,10 +31,16 @@ export function RecipeDetailPage() {
   const { status: authStatus } = useAuth();
   const detail = useRecipeDetail(recipeId);
   const deleteMut = useDeleteRecipe();
+  const setRatingMut = useSetRating(recipeId);
+  const deleteRatingMut = useDeleteRating(recipeId);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [heroFailed, setHeroFailed] = useState(false);
+  const [myScore, setMyScore] = useState(0);
+  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [ratingSaved, setRatingSaved] = useState(false);
+  const [cooking, setCooking] = useState(false);
 
   if (detail.isLoading) {
     return (
@@ -66,6 +83,49 @@ export function RecipeDetailPage() {
   if (!recipe) return null;
   const isOwner = recipe.is_owner === true;
   const showHeroImage = recipe.photo_url && !heroFailed;
+  const isAuthed = authStatus === 'authed';
+
+  // [US-020] 매칭 진행바 — 로그인 + 재고 대조 결과가 있을 때만(비로그인/재고0은 숨김, US-012 게이트 승계).
+  const availability = recipe.ingredient_availability;
+  const totalIng = recipe.ingredients.length;
+  const missingCount = availability?.missing_count ?? 0;
+  const showMatch = isAuthed && Boolean(availability) && totalIng > 0;
+  const missingIds = availability?.missing_ingredients?.map((m) => m.ingredient_id) ?? [];
+
+  async function onSaveRating() {
+    if (myScore < 1) {
+      setRatingError('별점을 선택해 주세요.');
+      return;
+    }
+    setRatingError(null);
+    setRatingSaved(false);
+    try {
+      const res = await setRatingMut.mutateAsync(myScore);
+      setMyScore(res.my_score ?? myScore);
+      setRatingSaved(true);
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'AUTH_REQUIRED') {
+        navigate(`/login?returnTo=${encodeURIComponent(`/recipes/${recipeId}`)}`);
+      } else {
+        setRatingError('평점 저장에 실패했어요. 다시 시도해 주세요.');
+      }
+    }
+  }
+
+  async function onClearRating() {
+    setRatingError(null);
+    try {
+      await deleteRatingMut.mutateAsync();
+      setMyScore(0);
+      setRatingSaved(false);
+    } catch {
+      setRatingError('평점 취소에 실패했어요.');
+    }
+  }
+
+  function goAddMissing() {
+    navigate(`/inventory?wizard=1&prefill=${encodeURIComponent(missingIds.join(','))}`);
+  }
 
   const onDelete = async () => {
     if (!recipeId) return;
@@ -111,6 +171,10 @@ export function RecipeDetailPage() {
           <div className="recipe-detail__meta">
             {recipe.category ? <Badge>{recipe.category}</Badge> : null}
             <Badge>재료 {recipe.ingredients.length}개</Badge>
+            {typeof recipe.cook_time_minutes === 'number' ? (
+              <span className="recipe-detail__cooktime">{recipe.cook_time_minutes}분</span>
+            ) : null}
+            {recipe.rating ? <RatingStars rating={recipe.rating} /> : null}
           </div>
 
           {recipe.description ? <p className="recipe-desc">{recipe.description}</p> : null}
@@ -125,6 +189,51 @@ export function RecipeDetailPage() {
                   <li key={i}>{step}</li>
                 ))}
               </ol>
+            )}
+          </section>
+
+          {/* [US-015] 평점 카드 — 평균은 공개, 입력은 로그인 필수 */}
+          <section className="recipe-section rating-card" aria-labelledby="rating-h">
+            <h2 id="rating-h">평점</h2>
+            <div className="rating-card__avg">
+              <RatingStars rating={recipe.rating} size={18} />
+            </div>
+            {isAuthed ? (
+              <div className="rating-card__input">
+                <RatingInput value={myScore} onChange={setMyScore} disabled={setRatingMut.isPending} />
+                <div className="rating-card__actions">
+                  <Button
+                    variant="ghost"
+                    onClick={() => void onSaveRating()}
+                    loading={setRatingMut.isPending}
+                  >
+                    평점 저장
+                  </Button>
+                  {myScore > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void onClearRating()}
+                      loading={deleteRatingMut.isPending}
+                    >
+                      평점 취소
+                    </Button>
+                  )}
+                </div>
+                <p className="note">1인 1평점 · 재저장 시 갱신됩니다.</p>
+                {ratingSaved && !ratingError && (
+                  <Alert variant="success">평점을 저장했어요.</Alert>
+                )}
+                {ratingError && <Alert variant="error">{ratingError}</Alert>}
+              </div>
+            ) : (
+              <p className="note">
+                별점을 남기려면{' '}
+                <Link to={`/login?returnTo=${encodeURIComponent(`/recipes/${recipe.id}`)}`}>
+                  로그인
+                </Link>
+                이 필요해요.
+              </p>
             )}
           </section>
         </div>
@@ -168,13 +277,35 @@ export function RecipeDetailPage() {
                 ))}
               </ul>
             )}
-            {/* US-012(Should) placeholder: 재고 대조는 확장 범위 */}
             {authStatus === 'guest' && (
               <p className="note" style={{ marginTop: 'var(--s-4)' }}>
-                로그인하면 내 재고 대비 부족한 재료를 확인할 수 있어요. (확장 예정)
+                로그인하면 내 재고 대비 부족한 재료를 확인할 수 있어요.
               </p>
             )}
           </section>
+
+          {/* [US-019/020] 요리 준비 — 로그인 회원. 매칭 진행바 + 요리 시작 + 부족 재료 추가 */}
+          {isAuthed && (
+            <div className="recipe-side-card cook-prep">
+              {showMatch && (
+                <>
+                  <h2 className="cook-prep__title">재료 준비 상태</h2>
+                  <MatchProgress total={totalIng} missing={missingCount} />
+                </>
+              )}
+              {cooking && (
+                <Alert variant="success">요리를 시작했어요. 아래 조리 단계를 따라 진행하세요.</Alert>
+              )}
+              <div className="cook-prep__actions">
+                <Button onClick={() => setCooking(true)}>요리 시작</Button>
+                {missingCount > 0 && (
+                  <Button variant="ghost" onClick={goAddMissing}>
+                    부족한 재료 추가하기
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </aside>
       </div>
 

@@ -1,11 +1,16 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { InventoryItem } from '../../api/inventory';
-import { Button, TextField } from '../../components';
+import type { StorageLocation } from '../../api/types';
+import { Button, Icon, Select, TextField } from '../../components';
+import { STORAGE_LOCATION_OPTIONS } from '../ingredients/constants';
 import { ExpiryBadge } from './ExpiryBadge';
 
 export interface InventoryEditValues {
   quantity: number;
   expires_at: string | null;
+  /** [US-017] 보관위치. */
+  storage_location: StorageLocation | null;
 }
 
 export interface InventoryRowProps {
@@ -21,7 +26,7 @@ export interface InventoryRowProps {
   onDeplete: () => void;
 }
 
-/** US-011 재고 테이블 1행 (기본 표시 / 인라인 편집: 수량·유통기한만). */
+/** US-011 재고 테이블 1행 (기본 표시 / 인라인 편집: 수량·유통기한·보관위치). US-021 역탐색 링크 포함. */
 export function InventoryRow({
   item,
   category,
@@ -37,6 +42,7 @@ export function InventoryRow({
   const unit = item.unit ?? '';
   const [qty, setQty] = useState(String(item.quantity));
   const [expiry, setExpiry] = useState(item.expires_at ?? '');
+  const [storage, setStorage] = useState<string>(item.storage_location ?? '');
 
   if (editing) {
     return (
@@ -69,13 +75,26 @@ export function InventoryRow({
             onChange={(e) => setExpiry(e.target.value)}
           />
         </td>
+        <td data-th="보관위치">
+          <Select
+            label="보관위치"
+            hideLabel
+            options={STORAGE_LOCATION_OPTIONS}
+            value={storage}
+            onChange={(e) => setStorage(e.target.value)}
+          />
+        </td>
         <td data-th="작업">
           <div className="inv-row-actions">
             <Button
               size="sm"
               loading={saving}
               onClick={() =>
-                onSave({ quantity: Number(qty), expires_at: expiry ? expiry : null })
+                onSave({
+                  quantity: Number(qty),
+                  expires_at: expiry ? expiry : null,
+                  storage_location: (storage || null) as StorageLocation | null,
+                })
               }
             >
               저장
@@ -108,22 +127,24 @@ export function InventoryRow({
           <ExpiryBadge expiresAt={null} today={today} />
         )}
       </td>
+      <td data-th="보관위치">
+        {item.storage_location ? <span className="inv-pill">{item.storage_location}</span> : '미입력'}
+      </td>
       <td data-th="작업">
         <div className="inv-row-actions">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onStartEdit}
-            aria-label={`${name} 수정`}
+          {/* [US-021] 이 재료로 만들 수 있는 레시피 역탐색 */}
+          <Link
+            className="inv-reverse-link"
+            to={`/?ingredient_id=${encodeURIComponent(item.ingredient_id)}`}
+            aria-label={`${name}로 만들 수 있는 레시피 찾기`}
+            title={`${name}로 만들 수 있는 레시피`}
           >
+            <Icon name="search" size={16} />
+          </Link>
+          <Button size="sm" variant="ghost" onClick={onStartEdit} aria-label={`${name} 수정`}>
             수정
           </Button>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={onDeplete}
-            aria-label={`${name} 소진 처리`}
-          >
+          <Button size="sm" variant="danger" onClick={onDeplete} aria-label={`${name} 소진 처리`}>
             소진
           </Button>
         </div>

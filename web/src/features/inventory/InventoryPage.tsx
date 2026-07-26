@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../api';
 import type { InventoryItem, InventoryWriteRequest } from '../../api/inventory';
-import { Alert, ConfirmDialog, EmptyState, ErrorState, Icon, TextField, Toast } from '../../components';
+import { Alert, Button, ConfirmDialog, EmptyState, ErrorState, Icon, TextField, Toast } from '../../components';
 import { InventoryAddForm } from './InventoryAddForm';
+import { InventoryWizard } from './InventoryWizard';
 import { InventoryTable } from './InventoryTable';
 import type { InventoryRowData } from './InventoryTable';
 import type { InventoryEditValues } from './InventoryRow';
@@ -33,6 +34,22 @@ export function InventoryPage() {
   const createMut = useCreateInventory();
   const updateMut = useUpdateInventory();
   const deleteMut = useDeleteInventory();
+
+  const [params, setParams] = useSearchParams();
+  const wizardOpen = params.get('wizard') === '1';
+  const prefillFirst = (params.get('prefill') ?? '').split(',')[0] || undefined;
+
+  function openWizard() {
+    const sp = new URLSearchParams(params);
+    sp.set('wizard', '1');
+    setParams(sp);
+  }
+  function closeWizard() {
+    const sp = new URLSearchParams(params);
+    sp.delete('wizard');
+    sp.delete('prefill');
+    setParams(sp);
+  }
 
   const [query, setQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -87,6 +104,7 @@ export function InventoryPage() {
           quantity: values.quantity,
           unit: item.unit ?? null,
           expires_at: values.expires_at,
+          storage_location: values.storage_location,
         },
       });
       setEditingId(null);
@@ -116,7 +134,7 @@ export function InventoryPage() {
         알려드려요. (로그인 회원 전용)
       </p>
 
-      {/* 재고 추가 (US-011 AC1) */}
+      {/* 재고 추가 (US-011 AC1, US-022 위저드) */}
       {master.isLoading ? (
         <div className="inv-card">
           <p role="status">재료 목록을 불러오는 중…</p>
@@ -125,14 +143,30 @@ export function InventoryPage() {
         <div className="inv-card">
           <Alert variant="error">재료 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</Alert>
         </div>
-      ) : (
-        <InventoryAddForm
+      ) : wizardOpen ? (
+        <InventoryWizard
           masterOptions={masterList}
-          existingIngredientIds={items.map((it) => it.ingredient_id)}
-          submitting={createMut.isPending}
-          formError={addError}
-          onSubmit={handleAdd}
+          prefillIngredientId={prefillFirst}
+          onClose={closeWizard}
+          onCreated={(name) => setToast(`“${name}”을(를) 재고에 추가했어요.`)}
         />
+      ) : (
+        <>
+          <InventoryAddForm
+            masterOptions={masterList}
+            existingIngredientIds={items.map((it) => it.ingredient_id)}
+            submitting={createMut.isPending}
+            formError={addError}
+            onSubmit={handleAdd}
+          />
+          {masterList.length > 0 && (
+            <div className="inv-wizard-entry">
+              <Button variant="ghost" size="sm" onClick={openWizard} iconLeft={<Icon name="box" size={14} />}>
+                단계별로 추가
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* 재고 목록 (3-상태) */}

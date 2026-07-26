@@ -63,6 +63,22 @@ export function Header({ authState, email, loggingOut, onLogout }: HeaderProps) 
       </Link>
 
       <nav className="sidebar__nav" aria-label="화면 이동">
+        {authState === 'authed' && (
+          <div className="sidebar__group">
+            <div className="sidebar__caption">개요</div>
+            <NavLink to="/home" className={navClass}>
+              {navIcon(
+                <>
+                  <path d="M3 10.5 12 3l9 7.5" />
+                  <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+                  <path d="M9 21v-6h6v6" />
+                </>,
+              )}
+              홈
+            </NavLink>
+          </div>
+        )}
+
         <div className="sidebar__group">
           <div className="sidebar__caption">요리</div>
           <NavLink to="/" end className={navClass}>

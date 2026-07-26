@@ -24,10 +24,12 @@ export function RecipeFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
+  const [cookTime, setCookTime] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [ingredients, setIngredients] = useState<LinkedIngredient[]>([]);
   const [steps, setSteps] = useState<string[]>(['']);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const [cookTimeError, setCookTimeError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [prefilled, setPrefilled] = useState(false);
 
@@ -37,6 +39,7 @@ export function RecipeFormPage({ mode }: { mode: 'create' | 'edit' }) {
     const r = detail.data;
     setTitle(r.title);
     setCategory(r.category ?? '');
+    setCookTime(typeof r.cook_time_minutes === 'number' ? String(r.cook_time_minutes) : '');
     setPhotoUrl(r.photo_url ?? null);
     setIngredients(
       r.ingredients.map((ing) => ({
@@ -65,10 +68,21 @@ export function RecipeFormPage({ mode }: { mode: 'create' | 'edit' }) {
     e.preventDefault();
     setFormError(null);
     setTitleError(null);
+    setCookTimeError(null);
 
     if (!title.trim()) {
       setTitleError('제목은 필수입니다.');
       return;
+    }
+    // [US-014] 조리시간: 비우면 null. 입력 시 0 이상 정수만 허용.
+    let cookTimeValue: number | null = null;
+    if (cookTime.trim() !== '') {
+      const n = Number(cookTime);
+      if (!Number.isInteger(n) || n < 0) {
+        setCookTimeError('조리시간은 0 이상의 정수(분)로 입력해 주세요.');
+        return;
+      }
+      cookTimeValue = n;
     }
     if (invalidQuantity) {
       setFormError('재료 수량을 숫자로 입력해 주세요.');
@@ -78,6 +92,7 @@ export function RecipeFormPage({ mode }: { mode: 'create' | 'edit' }) {
     const body: RecipeWriteRequest = {
       title: title.trim(),
       category: category || null,
+      cook_time_minutes: cookTimeValue,
       photo_url: photoUrl,
       steps: steps.map((s) => s.trim()).filter(Boolean),
       ingredients: ingredients.map((i) => ({
@@ -158,6 +173,19 @@ export function RecipeFormPage({ mode }: { mode: 'create' | 'edit' }) {
             options={RECIPE_CATEGORY_OPTIONS}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+          />
+          <TextField
+            label="조리시간"
+            optional
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            placeholder="예: 15"
+            hint="분 단위 정수. 비우면 표시가 생략됩니다."
+            value={cookTime}
+            onChange={(e) => setCookTime(e.target.value)}
+            error={cookTimeError ?? undefined}
           />
           <div className="field">
             <span className="field__label">

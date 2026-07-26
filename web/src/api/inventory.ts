@@ -2,7 +2,7 @@
 // openapi.yaml v1.0.0 의 InventoryItem / InventoryWriteRequest / InventoryListResponse 스키마를 따른다.
 // 계약에 없는 필드는 추가하지 않는다.
 import { apiRequest } from './client';
-import type { Paginated } from './types';
+import type { Paginated, StorageLocation } from './types';
 
 /** [US-011] 보유 재고 1건 (openapi: InventoryItem). */
 export interface InventoryItem {
@@ -13,6 +13,8 @@ export interface InventoryItem {
   unit?: string | null;
   /** 유통기한(YYYY-MM-DD, 선택) */
   expires_at?: string | null;
+  /** [v2.3.0/US-017] 보관위치(냉장실/냉동실/실온). 미입력 시 null. 표시·관리용(매칭 미반영). */
+  storage_location?: StorageLocation | null;
   owner_id: string;
   created_at: string;
   updated_at: string;
@@ -24,6 +26,8 @@ export interface InventoryWriteRequest {
   quantity: number;
   unit?: string | null;
   expires_at?: string | null;
+  /** [v2.3.0/US-017] 보관위치(냉장실/냉동실/실온). 선택. */
+  storage_location?: StorageLocation | null;
 }
 
 export interface InventoryListParams {

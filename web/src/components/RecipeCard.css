@@ -66,3 +66,12 @@
   margin-top: var(--s-2);
   border-radius: var(--r-sm);
 }
+/* [v2.3.0/US-014] 조리시간 표기 */
+.rcard__cooktime {
+  color: var(--c-n-600);
+  font-variant-numeric: tabular-nums;
+}
+/* [v2.3.0/US-015] 카드 평점 */
+.rcard__rating {
+  margin-top: var(--s-2);
+}

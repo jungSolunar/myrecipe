@@ -5,4 +5,8 @@ export type { ApiErrorCode } from './client';
 export * as authApi from './auth';
 export * as recipesApi from './recipes';
 export * as ingredientsApi from './ingredients';
+export * as inventoryApi from './inventory';
+export * as dashboardApi from './dashboard';
 export * as uploadsApi from './uploads';
+export type { InventoryItem, InventoryWriteRequest } from './inventory';
+export type { DashboardSummary, CategoryDistribution } from './dashboard';

@@ -2,6 +2,8 @@
 import { apiRequest } from './client';
 import type {
   Paginated,
+  RatingResponse,
+  RatingWriteRequest,
   RecipeDetail,
   RecipeListItem,
   RecipeListParams,
@@ -40,4 +42,20 @@ export function updateRecipe(recipeId: string, body: RecipeWriteRequest): Promis
 
 export function deleteRecipe(recipeId: string): Promise<void> {
   return apiRequest<void>(`/recipes/${encodeURIComponent(recipeId)}`, { method: 'DELETE' });
+}
+
+// ---- 별점 (US-015 [v2.3.0], 로그인 필수 1인 1평점 upsert) ----
+/** PUT /recipes/{id}/rating — 내 별점 등록/수정. */
+export function putRating(recipeId: string, body: RatingWriteRequest): Promise<RatingResponse> {
+  return apiRequest<RatingResponse>(`/recipes/${encodeURIComponent(recipeId)}/rating`, {
+    method: 'PUT',
+    body,
+  });
+}
+
+/** DELETE /recipes/{id}/rating — 내 별점 취소. */
+export function deleteRating(recipeId: string): Promise<RatingResponse> {
+  return apiRequest<RatingResponse>(`/recipes/${encodeURIComponent(recipeId)}/rating`, {
+    method: 'DELETE',
+  });
 }

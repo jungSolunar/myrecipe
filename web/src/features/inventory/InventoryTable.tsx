@@ -35,6 +35,7 @@ export function InventoryTable({
           <th scope="col">분류</th>
           <th scope="col">보유 수량</th>
           <th scope="col">유통기한</th>
+          <th scope="col">보관위치</th>
           <th scope="col">
             <span className="sr-only">작업</span>
           </th>

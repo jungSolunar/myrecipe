@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { ApiError } from '../../api';
-import type { Ingredient } from '../../api/types';
+import type { Ingredient, MasterStorage } from '../../api/types';
 import {
   Alert,
   Button,
@@ -11,10 +11,13 @@ import {
   Icon,
   Select,
   TextField,
+  Textarea,
   Toast,
 } from '../../components';
-import { CATEGORY_OPTIONS, UNIT_OPTIONS } from './constants';
+import { AliasInput } from './AliasInput';
+import { CATEGORY_OPTIONS, MASTER_STORAGE_OPTIONS, UNIT_OPTIONS } from './constants';
 import { IngredientRow } from './IngredientRow';
+import type { IngredientRowValues } from './IngredientRow';
 import {
   useCreateIngredient,
   useDeleteIngredient,
@@ -34,6 +37,10 @@ export function IngredientMasterPage() {
   const [name, setName] = useState('');
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0].value);
   const [unit, setUnit] = useState(UNIT_OPTIONS[0].value);
+  const [aliases, setAliases] = useState<string[]>([]);
+  const [kcal, setKcal] = useState('');
+  const [storage, setStorage] = useState('');
+  const [memo, setMemo] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,8 +59,20 @@ export function IngredientMasterPage() {
       return;
     }
     try {
-      await createMut.mutateAsync({ name: name.trim(), category, default_unit: unit });
+      await createMut.mutateAsync({
+        name: name.trim(),
+        category,
+        default_unit: unit,
+        aliases,
+        kcal_per_100g: kcal.trim() === '' ? null : Number(kcal),
+        default_storage: (storage || null) as MasterStorage | null,
+        memo: memo.trim() || null,
+      });
       setName('');
+      setAliases([]);
+      setKcal('');
+      setStorage('');
+      setMemo('');
       setToast(`“${name.trim()}”을(를) 추가했어요.`);
     } catch (err) {
       if (err instanceof ApiError && err.code === 'INGREDIENT_NAME_EXISTS') {
@@ -66,10 +85,7 @@ export function IngredientMasterPage() {
     }
   }
 
-  async function onSaveEdit(
-    id: string,
-    values: { name: string; category: string; default_unit: string },
-  ) {
+  async function onSaveEdit(id: string, values: IngredientRowValues) {
     try {
       await updateMut.mutateAsync({
         id,
@@ -77,6 +93,10 @@ export function IngredientMasterPage() {
           name: values.name.trim(),
           category: values.category || null,
           default_unit: values.default_unit || null,
+          aliases: values.aliases,
+          kcal_per_100g: values.kcal_per_100g,
+          default_storage: (values.default_storage || null) as MasterStorage | null,
+          memo: values.memo || null,
         },
       });
       setEditingId(null);
@@ -161,6 +181,33 @@ export function IngredientMasterPage() {
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
           />
+          <TextField
+            label="100g당 칼로리"
+            optional
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            placeholder="예: 40"
+            hint="kcal"
+            value={kcal}
+            onChange={(e) => setKcal(e.target.value)}
+          />
+          <Select
+            label="기본 보관방법"
+            options={MASTER_STORAGE_OPTIONS}
+            value={storage}
+            onChange={(e) => setStorage(e.target.value)}
+            hint="냉장/냉동/실온"
+          />
+          <AliasInput value={aliases} onChange={setAliases} />
+          <Textarea
+            label="메모"
+            rows={2}
+            placeholder="예: 봉지째 냉장 보관"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
           <Button type="submit" fullWidth loading={createMut.isPending} className="add-grid__submit">
             추가
           </Button>
@@ -174,7 +221,7 @@ export function IngredientMasterPage() {
             label="재료 검색"
             hideLabel
             type="search"
-            placeholder="재료명으로 검색"
+            placeholder="재료명 또는 별칭으로 검색"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -199,8 +246,11 @@ export function IngredientMasterPage() {
             <thead>
               <tr>
                 <th scope="col">재료명</th>
+                <th scope="col">별칭</th>
                 <th scope="col">분류</th>
                 <th scope="col">기본 단위</th>
+                <th scope="col">kcal</th>
+                <th scope="col">기본 보관</th>
                 <th scope="col">등록일</th>
                 <th scope="col">
                   <span className="sr-only">작업</span>

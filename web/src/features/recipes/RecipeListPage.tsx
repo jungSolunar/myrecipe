@@ -43,6 +43,7 @@ export function RecipeListPage() {
     category: params.get('category') ?? '',
     ingredientId: params.get('ingredient_id') ?? '',
     available: params.get('available') === '1',
+    sort: params.get('sort') ?? '',
   };
 
   // 재료 필터 옵션: 로그인 회원만 개인 마스터 조회 가능(계약상 /ingredients 는 인증 필요)
@@ -67,7 +68,10 @@ export function RecipeListPage() {
     ingredient_id: filters.ingredientId ? [filters.ingredientId] : undefined,
     // 추천 모드에서만 available_only + 부족 적은 순 정렬을 전달(off 면 undefined → 기존 요청과 동일).
     available_only: recommendActive ? true : undefined,
-    sort: recommendActive ? 'missing_asc' : undefined,
+    // 추천 모드는 부족 적은 순 고정, 그 외에는 사용자 선택 정렬(US-014/015). '' 이면 undefined(최신순).
+    sort: recommendActive
+      ? 'missing_asc'
+      : (filters.sort as 'cook_time_asc' | 'rating_desc') || undefined,
   });
 
   const items = recipeList.data?.data ?? [];
@@ -79,6 +83,7 @@ export function RecipeListPage() {
     if (next.category) sp.set('category', next.category);
     if (next.ingredientId) sp.set('ingredient_id', next.ingredientId);
     if (next.available) sp.set('available', '1');
+    if (next.sort) sp.set('sort', next.sort);
     setParams(sp);
   }
 

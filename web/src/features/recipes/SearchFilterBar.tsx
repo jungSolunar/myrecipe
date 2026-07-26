@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Button, Icon, Select } from '../../components';
+import type { SelectOption } from '../../components';
 import type { Ingredient } from '../../api/types';
 import { RECIPE_CATEGORY_OPTIONS } from '../ingredients/constants';
 import { RecommendFilterToggle } from './RecommendFilterToggle';
@@ -12,7 +13,16 @@ export interface RecipeFilters {
   ingredientId: string;
   /** [US-013] 만들 수 있는 레시피만(추천 모드) 필터 적용 여부. */
   available: boolean;
+  /** [US-014/015] 정렬. ''(최신순) | cook_time_asc | rating_desc. */
+  sort: string;
 }
+
+/** [v2.3.0] 정렬 옵션 (recipe-list 필터바에 additive). 값 없는 항목은 backend 가 뒤로 배치. */
+const SORT_OPTIONS: SelectOption[] = [
+  { value: '', label: '최신순' },
+  { value: 'cook_time_asc', label: '조리시간 짧은순' },
+  { value: 'rating_desc', label: '평점 높은순' },
+];
 
 export interface SearchFilterBarProps {
   filters: RecipeFilters;
@@ -91,6 +101,16 @@ export function SearchFilterBar({
             />
           </div>
         )}
+
+        {/* [US-014/015] 정렬 (조리시간 짧은순 · 평점 높은순) */}
+        <div className="search-filter__select">
+          <Select
+            label="정렬"
+            options={SORT_OPTIONS}
+            value={filters.sort}
+            onChange={(e) => onChange({ ...filters, sort: e.target.value })}
+          />
+        </div>
 
         {/* [US-013] 만들 수 있는 레시피만 추천 토글 */}
         <RecommendFilterToggle

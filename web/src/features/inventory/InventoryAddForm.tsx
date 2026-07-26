@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import type { Ingredient } from '../../api/types';
+import type { Ingredient, StorageLocation } from '../../api/types';
 import type { InventoryWriteRequest } from '../../api/inventory';
 import { Alert, Button, Select, TextField } from '../../components';
 import type { SelectOption } from '../../components';
+import { STORAGE_LOCATION_OPTIONS } from '../ingredients/constants';
 
 export interface InventoryAddFormProps {
   masterOptions: Ingredient[];
@@ -28,6 +29,7 @@ export function InventoryAddForm({
   const [ingredientId, setIngredientId] = useState('');
   const [qty, setQty] = useState('');
   const [expiry, setExpiry] = useState('');
+  const [storage, setStorage] = useState('');
   const [ingError, setIngError] = useState<string | null>(null);
   const [qtyError, setQtyError] = useState<string | null>(null);
 
@@ -87,10 +89,12 @@ export function InventoryAddForm({
         quantity,
         unit: unit || null,
         expires_at: expiry || null,
+        storage_location: (storage || null) as StorageLocation | null,
       });
       setIngredientId('');
       setQty('');
       setExpiry('');
+      setStorage('');
     } catch {
       // 실패 메시지는 formError 로 표시되며 입력값은 유지한다.
     }
@@ -146,6 +150,13 @@ export function InventoryAddForm({
           type="date"
           value={expiry}
           onChange={(e) => setExpiry(e.target.value)}
+        />
+        <Select
+          label="보관위치"
+          options={STORAGE_LOCATION_OPTIONS}
+          value={storage}
+          onChange={(e) => setStorage(e.target.value)}
+          hint="표시·관리용 (매칭 판정 미반영)"
         />
         <Button type="submit" fullWidth loading={submitting} className="inv-add__submit">
           추가

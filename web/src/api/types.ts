@@ -1,8 +1,15 @@
 /*
- * api/types.ts — api/openapi.yaml(v1.0.0) 계약에서 파생한 타입.
- * 계약에 없는 필드는 추가하지 않는다. (예: cookTime 등 임의 필드 금지)
+ * api/types.ts — api/openapi.yaml(v2.3.0) 계약에서 파생한 타입.
+ * 계약에 없는 필드는 추가하지 않는다. 계약 필드명·enum·정렬옵션명과 정확히 일치시킨다.
+ * v2.3.0(US-014~018) 확장 필드(cook_time_minutes·rating·aliases·kcal_per_100g·default_storage·memo·
+ *   storage_location)는 계약에 정식 반영됐으므로 optional 로 추가한다.
  * Should/Could(US-011~013) 필드는 계약에 optional 로 존재하므로 optional 로 반영한다.
  */
+
+/** [v2.3.0/US-016] 마스터 기본 보관방법 (재고 보관위치와 값이 다름 — 혼동 금지). */
+export type MasterStorage = '냉장' | '냉동' | '실온';
+/** [v2.3.0/US-017] 재고 보관위치. */
+export type StorageLocation = '냉장실' | '냉동실' | '실온';
 
 // ---- 공통 ----
 export interface ErrorDetail {
@@ -58,6 +65,12 @@ export interface RecipeIngredient {
   status?: IngredientAvailabilityStatus;
 }
 
+/** [v2.3.0/US-015] 레시피 회원별 평점 집계. 평가 0건이면 average=null, count=0. */
+export interface RecipeRating {
+  average: number | null;
+  count: number;
+}
+
 export interface RecipeListItem {
   id: string;
   title: string;
@@ -69,6 +82,10 @@ export interface RecipeListItem {
    * 0 = 모두 충족(지금 만들 수 있음), 1+ = 부족 개수. 추천 모드가 아니면 생략(optional/nullable).
    */
   missing_count?: number | null;
+  /** [v2.3.0/US-014] 조리시간(분). 미입력 시 null. */
+  cook_time_minutes?: number | null;
+  /** [v2.3.0/US-015] 회원별 평점 집계. */
+  rating?: RecipeRating;
   owner_id: string;
   created_at: string;
   updated_at: string;
@@ -95,6 +112,10 @@ export interface RecipeDetail {
   steps: string[];
   ingredients: RecipeIngredient[];
   ingredient_availability?: IngredientAvailability;
+  /** [v2.3.0/US-014] 조리시간(분). 미입력 시 null. */
+  cook_time_minutes?: number | null;
+  /** [v2.3.0/US-015] 회원별 평점 집계. */
+  rating?: RecipeRating;
   owner_id: string;
   is_owner?: boolean;
   created_at: string;
@@ -112,6 +133,8 @@ export interface RecipeWriteRequest {
   category?: string | null;
   description?: string | null;
   photo_url?: string | null;
+  /** [v2.3.0/US-014] 조리시간(분, 정수). 선택 — 미입력 시 null. */
+  cook_time_minutes?: number | null;
   steps: string[];
   ingredients: RecipeWriteIngredient[];
 }
@@ -122,17 +145,39 @@ export interface RecipeListParams {
   q?: string;
   category?: string;
   ingredient_id?: string[];
-  sort?: 'recent' | 'missing_asc';
+  /** recent(기본) | missing_asc(US-013) | rating_desc(US-015) | cook_time_asc(US-014). */
+  sort?: 'recent' | 'missing_asc' | 'rating_desc' | 'cook_time_asc';
   /** [US-013 Could] 내 재고로 모든 재료를 충족할 수 있는 레시피만. 로그인 필요. */
   available_only?: boolean;
 }
 
-// ---- 식재료 마스터 (US-008, US-009) ----
+// ---- 별점 (US-015 [v2.3.0]) ----
+export interface RatingWriteRequest {
+  /** 평점 (1~5 정수). */
+  score: number;
+}
+
+export interface RatingResponse {
+  recipe_id: string;
+  rating: RecipeRating;
+  /** 현재 회원의 평점. 취소(DELETE) 후에는 null. */
+  my_score?: number | null;
+}
+
+// ---- 식재료 마스터 (US-008, US-009, 확장필드 US-016) ----
 export interface Ingredient {
   id: string;
   name: string;
   category?: string | null;
   default_unit?: string | null;
+  /** [v2.3.0/US-016] 별칭(검색용, 복수). 미입력 시 빈 배열. */
+  aliases?: string[];
+  /** [v2.3.0/US-016] 100g당 칼로리(kcal). 미입력 시 null. */
+  kcal_per_100g?: number | null;
+  /** [v2.3.0/US-016] 기본 보관방법(냉장/냉동/실온). 미입력 시 null. */
+  default_storage?: MasterStorage | null;
+  /** [v2.3.0/US-016] 자유 메모. 미입력 시 null. */
+  memo?: string | null;
   owner_id: string;
   created_at: string;
   updated_at: string;
@@ -142,6 +187,10 @@ export interface IngredientWriteRequest {
   name: string;
   category?: string | null;
   default_unit?: string | null;
+  aliases?: string[];
+  kcal_per_100g?: number | null;
+  default_storage?: MasterStorage | null;
+  memo?: string | null;
 }
 
 export interface IngredientListParams {

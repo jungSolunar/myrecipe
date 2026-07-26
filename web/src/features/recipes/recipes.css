@@ -415,3 +415,105 @@
   cursor: pointer;
   margin-top: var(--s-1);
 }
+
+/* ══════════ v2.3.0 상세 확장 (US-014/015/019/020) ══════════ */
+.recipe-detail__cooktime {
+  font-size: var(--fs-sm);
+  color: var(--c-n-600);
+  font-variant-numeric: tabular-nums;
+}
+
+/* [US-015] 평점 카드 */
+.rating-card__avg {
+  margin-bottom: var(--s-3);
+}
+.rating-card__input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  align-items: flex-start;
+}
+.rating-card__actions {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+.rateinput-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.rateinput__label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--fg-muted);
+}
+.rateinput {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+.rateinput__star {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.rateinput__star:disabled {
+  cursor: default;
+}
+
+/* [US-019/020] 요리 준비 카드 */
+.cook-prep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.cook-prep__title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+}
+.cook-prep__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* [US-020] 매칭 진행 바 (home .matchrow 패턴) */
+.matchprog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.matchprog__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+}
+.matchprog__nums {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+.matchprog__pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-semibold);
+}
+.matchprog__track {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--gray-4);
+  overflow: hidden;
+}
+.matchprog__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  transition: width var(--duration-normal) var(--ease-out);
+}

@@ -1,0 +1,30 @@
+/* RatingStars — US-015 평균 평점 표시. 값은 tokens.css 변수만 사용. */
+.rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.rating .stars {
+  display: inline-flex;
+  gap: 1px;
+  line-height: 0;
+}
+.rating .star {
+  display: block;
+  flex: 0 0 auto;
+}
+.rating .ratingval {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+.rating .ratingcount {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.rating .ratingnone {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}

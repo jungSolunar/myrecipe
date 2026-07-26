@@ -1,0 +1,133 @@
+/* dashboard.css — US-018 홈 대시보드. 값은 tokens.css 변수만 사용. */
+.dash-page {
+  padding: var(--s-6);
+  max-width: var(--container);
+  margin: 0 auto;
+  width: 100%;
+}
+.dash-title {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+}
+.dash-sub {
+  color: var(--fg-muted);
+  margin-bottom: var(--s-6);
+}
+
+/* KPI 그리드 */
+.dash-kpigrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-4);
+  margin-bottom: var(--s-6);
+}
+.dash-kpicard {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-4);
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.dash-klabel {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--fg-muted);
+}
+.dash-kvalue {
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  font-variant-numeric: tabular-nums;
+}
+.dash-kvalue--success {
+  color: var(--status-success);
+}
+.dash-kvalue--warning {
+  color: var(--status-warning);
+}
+.dash-kunit {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--fg-muted);
+  margin-left: 2px;
+}
+.dash-kfoot {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* 패널 영역 */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--s-6);
+  align-items: start;
+}
+.dash-panelstack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+.dash-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.dash-panelhead {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+}
+.dash-panelrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-sm);
+  color: inherit;
+}
+.dash-panelrow:last-child {
+  border-bottom: none;
+}
+.dash-panelrow:hover {
+  background: var(--gray-2);
+}
+.dash-pname {
+  font-weight: var(--fw-medium);
+}
+.dash-pmeta {
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.dash-panelempty {
+  padding: var(--s-4);
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+/* 로딩 스켈레톤 */
+.dash-skel {
+  height: 12px;
+  border-radius: var(--r-sm);
+  background: var(--gray-3);
+  animation: pulse 1.5s var(--ease-out) infinite;
+  margin-top: var(--s-2);
+}
+.dash-skel--lg {
+  height: 26px;
+  width: 40%;
+}

@@ -5,6 +5,7 @@ import { useTheme } from './lib/useTheme';
 /** 라우트 경로 → 헤더에 표시할 페이지명. */
 function titleForPath(pathname: string): string {
   if (pathname === '/') return '레시피';
+  if (pathname.startsWith('/home')) return '홈';
   if (pathname.startsWith('/recipes/new')) return '새 레시피';
   if (pathname.endsWith('/edit')) return '레시피 수정';
   if (pathname.startsWith('/recipes/')) return '레시피 상세';
