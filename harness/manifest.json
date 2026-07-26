@@ -2,6 +2,7 @@
   "comment": "회귀 방지 하네스 설정. protected_paths는 체크섬으로 완전 동결. semantic_paths는 추가(additive)만 허용하는 의미 기반 검사.",
   "protected_paths": [
     "design/wireframes",
+    "design/v2.3.0/wireframes",
     "design/components.md",
     "web/src",
     "server"
