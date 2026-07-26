@@ -94,3 +94,31 @@
 ## 비고
 - 전 신규 컬럼 nullable·백필 없음(Q4-a), 신규 엔드포인트 additive → 기존 화면 회귀 0 목표.
 - 데이터/계약 영향 개괄은 PRD v2.3.0-5 참조(backend-dev G2 입력).
+
+---
+
+# 후속 백로그 — 구현 중 발견 갭
+버전: 후속 | 작성일: 2026-07-26 | 근거: recipe-detail 작성자 카드 구현 시도 중 API 계약 갭 확인
+> 위 v1·v2.3.0 백로그는 불변 보존. 아래는 Additive-Only 신규 항목.
+
+## Could — 데이터 계약 보강
+| ID | 제목 | 근거 | 예상 크기 |
+|---|---|---|---|
+| US-023 | 레시피 작성자 표시명 노출 (예: `RecipeDetail.owner_display_name`) | recipe-detail 작성자 카드 미완성 — 아래 상세 | 소규모(BE ~0.5~1일 + FE ~0.5일) |
+
+### US-023 상세
+- **근거**: `design/v2.3.0/wireframes/recipe-detail.html` 작성자 카드는 작성자 이름/아바타를 표기하나,
+  현재 API 계약(`RecipeDetail`)에는 표시명 필드가 없다. 계약상 존재하는 필드는
+  `owner_id`, `is_owner`, `created_at`, `updated_at` 뿐이라(api/openapi.yaml `RecipeDetail`,
+  web/src/api/types.ts `RecipeDetail`), 카드는 등록 시각·소유 여부만 표기하고 이름/아바타는 생략된 상태다.
+- **영향 범위**
+  - BE: openapi `RecipeDetail` 스키마에 표시명 필드(optional/additive) 추가 + server/app 응답 채우기.
+  - FE: 작성자 카드에 이름/아바타 표시(와이어프레임 대비 누락분 보완).
+- **확인 필요(개인정보 노출 범위)**: 무엇을 표시명으로 노출할지 미정 — 이메일 전체 vs 표시명(닉네임) vs 이니셜.
+  개인정보 최소 노출 원칙과 상충 가능하므로 planner/사용자 확인 후 필드 정의 확정 필요.
+- **우선순위 근거**: 상세 화면 핵심 기능(조회·조리·매칭)은 표시명 없이도 동작 → Could.
+  계약 additive 필드 1개 + 카드 표시로 소규모.
+
+## 의존 관계
+- US-005(레시피 상세 조회) 위에 얹히는 표시명 보강. 선행 스토리 없음.
+- 표시명 필드 정의는 개인정보 노출 범위 확정(위 "확인 필요") 후 착수 권장.
