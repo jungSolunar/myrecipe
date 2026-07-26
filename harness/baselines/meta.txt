@@ -1,3 +1,3 @@
-captured_at: 2026-07-26T17:32:29+09:00
-reason: v2.3.0
-git_ref: 1a020d7187b9c406f7fc862eb1565e5f780f06c7
+captured_at: 2026-07-26T18:15:59+09:00
+reason: v2.3.0-wireframes-protect
+git_ref: ef3a3fdea78c161432b4a3be7d6a1f9528ea6498
