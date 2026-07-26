@@ -158,3 +158,43 @@ cd server
 - `harness/baselines/`와 `harness/baseline-history.log`는 git 커밋 대상이다.
 - 이후 의도된 변경 승인은 사용자만: `./harness/baseline.sh --approve <스토리ID>`
 - **에이전트/CI는 baseline.sh를 실행하지 않는다(사용자 전용).**
+
+---
+
+## 9. v2.3.0 배포 (레시피 상자 기능 확장 — US-014~022)
+
+> v2.3.0은 **DB 마이그레이션이 있는 첫 후속 릴리스**다(v1.1.0/v1.2.0은 스키마 무변경). 아래 순서를 지킨다.
+> 릴리스 노트: `docs/releases/v2.3.0.md`.
+
+### 9.1 마이그레이션 (`002_v230.sql`)
+
+- 파일: `server/app/migrations/002_v230.sql` — **additive-only**(nullable `ADD COLUMN` + 신규 테이블 `recipe_ratings`), 백필 없음.
+  - `recipes.cook_time_minutes` / `ingredients.aliases_json·kcal_per_100g·default_storage·memo` / `inventory_items.storage_location` 추가.
+  - 신규 테이블 `recipe_ratings`(+ 활성 UNIQUE·조회 인덱스).
+- **적용 순서**: 4절 원칙과 동일 — 앱 **기동 시 lifespan `run_migrations()`가 자동 적용**한다. `schema_migrations`로 idempotent(중복 적용 방지), 파일명 사전순으로 `001_init.sql` 다음 `002_v230.sql`이 적용된다. **수동 명령 없음**.
+- **선행 조건**: 배포 **직전** `DB_PATH` 스냅샷을 반드시 남긴다(7.2절 `cp "$DB_PATH" "$DB_PATH.bak-..."`).
+
+### 9.2 배포 절차
+
+1. CI 그린 확인 (backend pytest 64 / frontend lint·test·build 53 / harness).
+   - ⚠️ **하네스 스텝은 재베이스라인(9.4) 전까지 red(exit 1)가 정상**이다. 아래 9.4를 참고해 판단한다.
+2. 배포 직전 `DB_PATH`·`UPLOAD_DIR` 스냅샷.
+3. 릴리스 태그 `v2.3.0` 지정.
+4. 백엔드 배포: 새 코드 + venv → 기동(기동 시 `002_v230.sql` 자동 적용). 로그에서 마이그레이션 적용 확인.
+5. 프론트 배포: `web/dist/` 업로드 후 CDN 캐시 무효화.
+6. 스모크 테스트: `/openapi.json` 200, 로그인, 레시피 목록/상세, **홈 대시보드(`GET /dashboard`, 로그인)**, **별점 등록·취소(`PUT|DELETE /recipes/{id}/rating`)** 핵심 플로우 확인.
+
+### 9.3 롤백 절차 (v2.3.0 → v2.0.0)
+
+- **애플리케이션 롤백만으로 안전**: `002_v230.sql`은 additive(nullable 컬럼 + 신규 테이블)이므로 구버전(v2.0.0) 코드가 남은 컬럼/테이블을 무시하고 동작한다. **스키마 되돌림 불필요.**
+- FE·BE를 직전 릴리스(v2.0.0) 아티팩트/태그로 재기동 + CDN 캐시 무효화.
+- 데이터 손상 등 예외 상황에서만 배포 직전 `DB_PATH` 스냅샷으로 복원(7.2절). 마이그레이션은 **전진 전용** — 자동 다운 마이그레이션은 없다.
+
+### 9.4 재베이스라인 (사용자 전용) — ✅ 완료 (2026-07-26)
+
+- v2.3.0은 홈 대시보드 셸 등에 **사전 승인된 additive 편집**(App.tsx/AppLayout/Header 순수 추가)이 있어 구현 시점엔 보호 파일 무결성만 red였다(삭제 0·기능 회귀 0의 예상된 red).
+- 사용자가 아래를 실행해 새 베이스라인에 반영 완료 → **하네스 전체 green, CI 하네스 스텝 green**:
+  ```bash
+  ./harness/baseline.sh --approve v2.3.0    # 사용자 전용, 실행됨(git_ref 1a020d7)
+  ```
+- (참고) 향후 보호 파일 additive 편집 시 동일 절차를 따른다. 하네스 스텝은 삭제하지 않는다.
