@@ -18,10 +18,44 @@ import { RatingInput } from './RatingInput';
 import { useDeleteRating, useDeleteRecipe, useRecipeDetail, useSetRating } from './useRecipes';
 import './recipes.css';
 
+/**
+ * [v2.3.0/US-020] 부족 재료명 요약 라벨. 와이어프레임 상태 A "부족 · 대파" 표현.
+ * 최대 2개까지 이름을 ", "로 잇고 초과분은 "외 N종"으로 축약(예: "대파, 소금 외 2종").
+ * 이름이 하나도 없으면(계약상 missing_ingredients 생략 가능) 개수만 표기.
+ */
+function formatMissingNames(names: string[], missingCount: number, max = 2): string {
+  if (names.length === 0) return `${missingCount}종`;
+  const shown = names.slice(0, max).join(', ');
+  const overflow = names.length - max;
+  return overflow > 0 ? `${shown} 외 ${overflow}종` : shown;
+}
+
 function statusBadge(status: RecipeIngredient['status']) {
   if (status === 'sufficient') return <Badge tone="success">보유</Badge>;
   if (status === 'insufficient' || status === 'missing') return <Badge tone="warning">부족</Badge>;
   return null;
+}
+
+/**
+ * created_at(ISO) → 등록 시각 표기. 최근이면 상대시간, 그 외엔 절대 날짜.
+ * 표시명(작성자 이름)은 RecipeDetail 계약에 없으므로 시각만 렌더한다.
+ */
+function formatRegisteredAt(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return iso;
+  const diffMs = Date.now() - then;
+  const min = Math.floor(diffMs / 60000);
+  if (min < 1) return '방금 전';
+  if (min < 60) return `${min}분 전`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}시간 전`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day}일 전`;
+  return new Date(then).toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 }
 
 /** US-005 상세, US-006/007 소유자 액션 진입, US-007 삭제 확인. */
@@ -91,6 +125,9 @@ export function RecipeDetailPage() {
   const missingCount = availability?.missing_count ?? 0;
   const showMatch = isAuthed && Boolean(availability) && totalIng > 0;
   const missingIds = availability?.missing_ingredients?.map((m) => m.ingredient_id) ?? [];
+  // [US-020] 부족 재료명(없으면 ingredient_id 폴백) → "부족 · 대파, 소금 외 2종" 라벨
+  const missingNames = availability?.missing_ingredients?.map((m) => m.name ?? m.ingredient_id) ?? [];
+  const missingLabel = formatMissingNames(missingNames, missingCount);
 
   async function onSaveRating() {
     if (myScore < 1) {
@@ -177,6 +214,25 @@ export function RecipeDetailPage() {
             {recipe.rating ? <RatingStars rating={recipe.rating} /> : null}
           </div>
 
+          {/* 소유자 액션 — 와이어프레임 .ownerrow: 제목·메타 아래(본문) 배치 */}
+          {isOwner && (
+            <div className="owner-actions">
+              <Link className="btn btn--ghost" to={`/recipes/${recipe.id}/edit`}>
+                수정
+              </Link>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={() => {
+                  setDeleteError(null);
+                  setConfirmOpen(true);
+                }}
+              >
+                삭제
+              </button>
+            </div>
+          )}
+
           {recipe.description ? <p className="recipe-desc">{recipe.description}</p> : null}
 
           <section className="recipe-section" aria-labelledby="step-h">
@@ -239,25 +295,26 @@ export function RecipeDetailPage() {
         </div>
 
         <aside className="recipe-detail__side">
-          {isOwner && (
-            <div className="recipe-side-card owner-actions">
-              <Link className="btn btn--ghost" to={`/recipes/${recipe.id}/edit`}>
-                수정
-              </Link>
-              <button
-                type="button"
-                className="btn btn--danger"
-                onClick={() => {
-                  setDeleteError(null);
-                  setConfirmOpen(true);
-                }}
-              >
-                삭제
-              </button>
-            </div>
-          )}
+          {/* [US-019/020] 재료 준비 상태 — 매칭 진행바 + 재료 목록 + 요리 시작/부족 재료 추가를 한 카드로 통합 */}
+          <section className="recipe-side-card cook-prep" aria-labelledby="ing-h">
+            {/* 매칭 진행바 (로그인 + 재고 대조 결과가 있을 때만) */}
+            {showMatch && (
+              <>
+                <h2 className="cook-prep__title">재료 준비 상태</h2>
+                <MatchProgress total={totalIng} missing={missingCount} />
+                {/* [US-020] 부족 재료명 배지 — 색만으로 전달하지 않도록 텍스트+aria로 동일 정보 제공 */}
+                {missingCount > 0 && (
+                  <span
+                    className="badge badge--warning cook-prep__missing"
+                    aria-label={`부족한 재료: ${missingLabel}`}
+                  >
+                    부족 · {missingLabel}
+                  </span>
+                )}
+              </>
+            )}
 
-          <section className="recipe-section" aria-labelledby="ing-h">
+            {/* 재료 목록 (보유/부족 배지) */}
             <h2 id="ing-h">재료</h2>
             {recipe.ingredients.length === 0 ? (
               <p style={{ color: 'var(--c-n-600)' }}>등록된 재료가 없어요.</p>
@@ -282,30 +339,40 @@ export function RecipeDetailPage() {
                 로그인하면 내 재고 대비 부족한 재료를 확인할 수 있어요.
               </p>
             )}
+
+            {/* 요리 시작 + 부족 재료 추가 — 로그인 회원 */}
+            {isAuthed && (
+              <>
+                {cooking && (
+                  <Alert variant="success">
+                    요리를 시작했어요. 아래 조리 단계를 따라 진행하세요.
+                  </Alert>
+                )}
+                <div className="cook-prep__actions">
+                  <Button onClick={() => setCooking(true)}>요리 시작</Button>
+                  {missingCount > 0 && (
+                    <Button variant="ghost" onClick={goAddMissing}>
+                      부족한 재료 추가하기 ({missingCount}종)
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
           </section>
 
-          {/* [US-019/020] 요리 준비 — 로그인 회원. 매칭 진행바 + 요리 시작 + 부족 재료 추가 */}
-          {isAuthed && (
-            <div className="recipe-side-card cook-prep">
-              {showMatch && (
-                <>
-                  <h2 className="cook-prep__title">재료 준비 상태</h2>
-                  <MatchProgress total={totalIng} missing={missingCount} />
-                </>
-              )}
-              {cooking && (
-                <Alert variant="success">요리를 시작했어요. 아래 조리 단계를 따라 진행하세요.</Alert>
-              )}
-              <div className="cook-prep__actions">
-                <Button onClick={() => setCooking(true)}>요리 시작</Button>
-                {missingCount > 0 && (
-                  <Button variant="ghost" onClick={goAddMissing}>
-                    부족한 재료 추가하기
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
+          {/* 작성자/등록 정보 — 표시명 필드가 계약에 없어 등록 시각·소유 여부만 표기 */}
+          <section className="recipe-side-card author-card" aria-labelledby="author-h">
+            <h2 id="author-h" className="author-card__title">
+              등록 정보
+            </h2>
+            <p className="author-card__row">
+              <span className="author-card__label">등록</span>
+              <time className="author-card__time" dateTime={recipe.created_at}>
+                {formatRegisteredAt(recipe.created_at)}
+              </time>
+            </p>
+            {isOwner && <p className="author-card__mine">내 레시피</p>}
+          </section>
         </aside>
       </div>
 

@@ -466,20 +466,56 @@
   cursor: default;
 }
 
-/* [US-019/020] 요리 준비 카드 */
+/* [US-019/020] 재료 준비 상태 카드 (매칭 진행바 + 재료 목록 + 요리 준비 통합) */
 .cook-prep {
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
 }
-.cook-prep__title {
+.cook-prep__title,
+.cook-prep h2 {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
+  margin: 0;
 }
 .cook-prep__actions {
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
+}
+/* [v2.3.0/US-020] 부족 재료명 배지 — 진행바 바로 아래, 좌측 정렬 (와이어프레임 상태 A) */
+.cook-prep__missing {
+  align-self: flex-start;
+}
+
+/* 작성자/등록 정보 카드 (표시명 필드 부재 → 등록 시각·소유 여부만) */
+.author-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.author-card__title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  margin: 0;
+}
+.author-card__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+}
+.author-card__label {
+  color: var(--c-n-600);
+}
+.author-card__time {
+  color: var(--c-n-700);
+  font-variant-numeric: tabular-nums;
+}
+.author-card__mine {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--accent-11);
 }
 
 /* [US-020] 매칭 진행 바 (home .matchrow 패턴) */
