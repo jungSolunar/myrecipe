@@ -12,6 +12,22 @@
 #     - US-013 [Could] 추천 로직 구현. GET /recipes 의 available_only/sort=missing_asc 를 실제 반영.
 #     - RecipeListItem 에 optional nullable `missing_count`(integer) 추가 — 로그인 사용자의
 #       재고 대비 부족 재료 수. 비로그인/미계산 시 null. (additive: 기존 필드/엔드포인트 불변)
+#   v2.3.0 (2026-07-25, backend-dev, G2 — 레시피 상자 기능 확장, Additive-Only)
+#     - [US-014] cook_time_minutes(정수, nullable) 추가 — RecipeDetail/RecipeListItem(읽기),
+#       RecipeWriteRequest(쓰기). RecipeListParams.sort 에 cook_time_asc 추가(값 없으면 뒤로).
+#     - [US-015] 회원별 별점 집계. RecipeDetail/RecipeListItem 에 읽기 필드 rating{average,count}
+#       추가(평가 0건이면 average=null, count=0). 신규 엔드포인트 PUT/DELETE /recipes/{recipeId}/rating
+#       (로그인 필수, 1인 1평점 upsert/취소, 응답에 갱신된 average·count·my_score 포함).
+#       RecipeListParams.sort 에 rating_desc 추가(평가 없는 항목은 뒤로).
+#     - [US-016] 식재료 마스터 확장: Ingredient/IngredientWriteRequest 에 aliases(문자열 배열),
+#       kcal_per_100g(number, nullable), default_storage(enum 냉장/냉동/실온, nullable),
+#       memo(string, nullable) 추가. GET /ingredients 의 q 가 별칭(aliases)도 매칭.
+#     - [US-017] InventoryItem/InventoryWriteRequest 에 storage_location(enum 냉장실/냉동실/실온,
+#       nullable) 추가.
+#     - [US-018] 신규 엔드포인트 GET /dashboard — 홈 대시보드 KPI 4종·패널 3종 집계(로그인 필수).
+#       매칭률 100% 판정은 v1 US-012 부족판정 규칙 승계(유통기한·보관위치 미반영, PRD Q3-a).
+#     - [US-021] 역탐색은 기존 GET /recipes?ingredient_id= 를 그대로 활용 — 신규 계약 없음(확인만).
+#     - 하위호환: 모든 신규 필드는 optional, 신규 엔드포인트는 additive. 기존 계약 불변.
 #
 # 규칙(api-conventions 스킬 준수):
 #   - URL: /api/v1/, 복수 명사 리소스, 동사 금지
@@ -24,7 +40,7 @@ openapi: 3.0.3
 
 info:
   title: 레시피 & 식재료 관리 API
-  version: 1.2.0
+  version: 2.3.0
   description: |
     개인 회원이 자신의 레시피와 식재료를 등록·검색·관리하는 웹서비스 API.
 
@@ -55,7 +71,11 @@ tags:
   - name: ingredients
     description: 식재료 개인 마스터 CRUD — US-008 (레시피 연결은 US-009)
   - name: inventory
-    description: 보유 재고 관리 — US-011 [Should, 확장]
+    description: 보유 재고 관리 — US-011 [Should, 확장], US-017 보관위치
+  - name: ratings
+    description: 레시피 별점 (회원별 평점 집계) — US-015 [v2.3.0]
+  - name: dashboard
+    description: 홈 대시보드 집계 (KPI·패널) — US-018 [v2.3.0]
   - name: uploads
     description: 사진 업로드 — US-004 사진(선택) 지원
 
@@ -178,6 +198,9 @@ paths:
         - `ingredient_id`: 재료 필터. 반복 지정 시 지정한 재료를 모두 포함하는 레시피 (US-010)
         - `available_only`: 내 재고로 모든 재료 충족 가능한 레시피만 (US-013 [Could], 로그인 필요)
         - `sort`: 정렬. `recent`(기본) | `missing_asc`(부족 재료 적은 순, US-013 [Could])
+          | `rating_desc`(평균 평점 높은 순, US-015) | `cook_time_asc`(조리시간 짧은 순, US-014).
+          `rating_desc` 는 평가 없는(평균 null) 레시피를, `cook_time_asc` 는 조리시간 없는(null)
+          레시피를 각각 **뒤로** 정렬한다(값 없는 항목은 항상 마지막). (v2.3.0 additive)
         결과 없음 시 200 + 빈 data (US-010 빈 결과 안내).
       security: []
       parameters:
@@ -218,9 +241,12 @@ paths:
         - name: sort
           in: query
           required: false
+          description: >-
+            정렬 옵션. rating_desc(평가 없는 항목은 뒤로)·cook_time_asc(조리시간 없는 항목은 뒤로)는
+            v2.3.0 additive. 값 없는 항목은 항상 마지막에 배치.
           schema:
             type: string
-            enum: [recent, missing_asc]
+            enum: [recent, missing_asc, rating_desc, cook_time_asc]
             default: recent
             example: recent
       responses:
@@ -315,20 +341,107 @@ paths:
           $ref: '#/components/responses/NotFound'
 
   # ===========================================================================
+  # 레시피 별점 (회원별 평점 집계) — US-015 [v2.3.0]
+  #   회원별 집계: 레시피 소유자의 단일값이 아니라 여러 회원의 평점을 모은 평균/개수다.
+  #   1인 1평점 upsert(PUT). 내 평점 취소(DELETE). 평가 0건이면 average=null.
+  # ===========================================================================
+  /recipes/{recipeId}/rating:
+    parameters:
+      - $ref: '#/components/parameters/RecipeId'
+    put:
+      tags: [ratings]
+      summary: 내 별점 등록/수정 (US-015, 1인 1평점 upsert)
+      description: |
+        로그인 필요. 현재 회원이 이 레시피에 남기는 평점(1~5)을 저장한다.
+        이미 남긴 평점이 있으면 **갱신**되며 평가 수는 증가하지 않는다(1인 1평점).
+        응답으로 갱신된 레시피의 평균 평점·평가 수와 내 평점을 반환한다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingWriteRequest'
+      responses:
+        '200':
+          description: 평점 저장/갱신됨. 갱신된 집계 반환.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AuthRequired'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [ratings]
+      summary: 내 별점 취소 (US-015)
+      description: |
+        로그인 필요. 현재 회원이 이 레시피에 남긴 평점을 취소(soft delete)한다.
+        평가 수가 1 감소하고 평균이 재계산된다. 내 평점이 없었으면 404.
+        응답으로 갱신된 집계를 반환한다(my_score 는 null).
+      responses:
+        '200':
+          description: 평점 취소됨. 갱신된 집계 반환.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingResponse'
+        '401':
+          $ref: '#/components/responses/AuthRequired'
+        '404':
+          description: 취소할 내 평점 또는 레시피가 없음 (RESOURCE_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: RESOURCE_NOT_FOUND
+                  message: 취소할 평점이 없습니다.
+                  details: []
+
+  # ===========================================================================
+  # 홈 대시보드 집계 — US-018 [v2.3.0]
+  # ===========================================================================
+  /dashboard:
+    get:
+      tags: [dashboard]
+      summary: 홈 대시보드 요약 (US-018, KPI 4종 + 패널 3종)
+      description: |
+        로그인 필요(개인 재고 기반, Q6-b). 홈 화면의 KPI 4종과 패널 3종을 한 번에 반환한다.
+        - KPI: 등록 레시피 수 / 지금 만들 수 있는 레시피 수(매칭률 100%) / 내 재고 종수 / 임박 재료(D-3) 수
+        - 패널: 만들 수 있는 레시피(매칭률 100%) / 유통기한 임박(D-3) / 최근 추가 레시피
+        매칭률 100% 판정은 v1 US-012 부족판정 규칙 승계(동일 단위 비교, **유통기한·보관위치 미반영**, Q3-a).
+        임박(D-3)은 오늘 기준 유통기한이 3일 이내(D-day ≤ 3)인 재고를 센다.
+      responses:
+        '200':
+          description: 대시보드 요약
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          $ref: '#/components/responses/AuthRequired'
+
+  # ===========================================================================
   # 식재료 개인 마스터 — US-008 (연결은 US-009, 레시피 요청 본문에서 처리)
   # ===========================================================================
   /ingredients:
     get:
       tags: [ingredients]
       summary: 내 식재료 마스터 목록 (US-008)
-      description: 회원 개인별 마스터이므로 로그인 필요. `q` 로 이름 검색(레시피 편집 시 재료 검색, US-009).
+      description: |
+        회원 개인별 마스터이므로 로그인 필요. `q` 로 이름 검색(레시피 편집 시 재료 검색, US-009).
+        [v2.3.0/US-016] `q` 는 재료명뿐 아니라 **별칭(aliases)** 도 매칭한다(별칭 검색).
       parameters:
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
         - name: q
           in: query
           required: false
-          description: 재료명 검색 키워드
+          description: 재료명 또는 별칭(aliases) 검색 키워드 (US-016 별칭 매칭)
           schema:
             type: string
             example: 양파
@@ -881,6 +994,16 @@ components:
             [US-013] 로그인 사용자의 재고 대비 부족한(없거나 동일 단위 기준 수량 미달) 재료 수.
             비로그인 또는 미계산 시 null. 단위 환산 미지원(US-012와 동일 판정 기준).
           example: 2
+        cook_time_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: '[v2.3.0/US-014] 조리시간(분). 미입력 시 null. 로그인 시 표기/정렬.'
+          example: 15
+        rating:
+          allOf:
+            - $ref: '#/components/schemas/RecipeRating'
+          description: '[v2.3.0/US-015] 회원별 평점 집계(평균·평가수). 평가 0건이면 average=null, count=0.'
         owner_id:
           type: string
           example: usr_01HZX2Kme
@@ -899,6 +1022,8 @@ components:
         photo_url: https://cdn.example.com/u/rcp_01HZX2KpQ.jpg
         ingredient_count: 5
         missing_count: 2
+        cook_time_minutes: 15
+        rating: { average: 4.5, count: 12 }
         owner_id: usr_01HZX2Kme
         created_at: '2026-07-24T10:00:00Z'
         updated_at: '2026-07-24T10:00:00Z'
@@ -942,6 +1067,18 @@ components:
             $ref: '#/components/schemas/RecipeIngredient'
         ingredient_availability:
           $ref: '#/components/schemas/IngredientAvailability'
+        cook_time_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: '[v2.3.0/US-014] 조리시간(분). 미입력 시 null. "N분"으로 표시.'
+          example: 15
+        rating:
+          allOf:
+            - $ref: '#/components/schemas/RecipeRating'
+          description: >-
+            [v2.3.0/US-015] 회원별 평점 집계(평균·평가수). 평가 0건이면 average=null, count=0.
+            my_score(내 평점)는 별점 입력 엔드포인트 응답(RatingResponse)에서 제공.
         owner_id:
           type: string
           example: usr_01HZX2Kme
@@ -975,6 +1112,8 @@ components:
           missing_count: 1
           missing_ingredients:
             - { ingredient_id: ing_01HZX9Q77, name: 돼지고기, required_quantity: 200, unit: g }
+        cook_time_minutes: 15
+        rating: { average: 4.5, count: 12 }
         owner_id: usr_01HZX2Kme
         is_owner: true
         created_at: '2026-07-24T10:00:00Z'
@@ -1002,6 +1141,12 @@ components:
           nullable: true
           description: /uploads/images 로 업로드해 받은 URL (선택)
           example: https://cdn.example.com/u/rcp_01HZX2KpQ.jpg
+        cook_time_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: '[v2.3.0/US-014] 조리시간(분, 정수). 선택 — 미입력 시 null.'
+          example: 15
         steps:
           type: array
           items:
@@ -1031,6 +1176,7 @@ components:
         category: 한식
         description: 묵은지로 끓이는 얼큰한 김치찌개
         photo_url: https://cdn.example.com/u/rcp_01HZX2KpQ.jpg
+        cook_time_minutes: 15
         steps:
           - 냄비에 김치와 물을 넣고 끓인다.
           - 돼지고기를 넣고 20분 더 끓인다.
@@ -1060,11 +1206,189 @@ components:
             category: 한식
             photo_url: https://cdn.example.com/u/rcp_01HZX2KpQ.jpg
             ingredient_count: 5
+            cook_time_minutes: 15
+            rating: { average: 4.5, count: 12 }
             owner_id: usr_01HZX2Kme
             created_at: '2026-07-24T10:00:00Z'
             updated_at: '2026-07-24T10:00:00Z'
         next_cursor: eyJpZCI6InJjcF8wMUhaWDkifQ
         has_more: true
+
+    # ---- 별점 (회원별 평점 집계, US-015 [v2.3.0]) ----
+    RecipeRating:
+      type: object
+      description: |
+        [US-015] 레시피의 회원별 평점 집계. 소유자 단일값이 아니라 여러 회원 평점의 집계다.
+        평가가 0건이면 average=null, count=0.
+      required: [average, count]
+      properties:
+        average:
+          type: number
+          format: float
+          nullable: true
+          minimum: 1
+          maximum: 5
+          description: 평균 평점(1~5). 평가 0건이면 null(계산에서 제외).
+          example: 4.5
+        count:
+          type: integer
+          minimum: 0
+          description: 평가한 회원 수(평가 수).
+          example: 12
+      example:
+        average: 4.5
+        count: 12
+
+    RatingWriteRequest:
+      type: object
+      description: '[US-015] 별점 등록/수정 본문. 1인 1평점 upsert.'
+      required: [score]
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: 평점 (1~5 정수). 범위 밖이면 400.
+          example: 5
+      example:
+        score: 5
+
+    RatingResponse:
+      type: object
+      description: |
+        [US-015] 별점 등록/수정/취소 후 갱신된 레시피 평점 집계와 내 평점.
+        DELETE(취소) 응답에서는 my_score 가 null.
+      required: [recipe_id, rating]
+      properties:
+        recipe_id:
+          type: string
+          example: rcp_01HZX2KpQ
+        rating:
+          $ref: '#/components/schemas/RecipeRating'
+        my_score:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+          description: 현재 회원의 평점. 취소(DELETE) 후에는 null.
+          example: 5
+      example:
+        recipe_id: rcp_01HZX2KpQ
+        rating: { average: 4.6, count: 13 }
+        my_score: 5
+
+    # ---- 홈 대시보드 (US-018 [v2.3.0]) ----
+    DashboardSummary:
+      type: object
+      description: |
+        [US-018] 홈 대시보드 요약. KPI 4종 + 패널 3종. 로그인 회원 개인 데이터 기반.
+        makeable_* 판정은 매칭률 100%(v1 US-012 규칙 승계, 유통기한·보관위치 미반영).
+      required:
+        - registered_recipe_count
+        - makeable_recipe_count
+        - inventory_ingredient_count
+        - expiring_soon_count
+        - makeable_recipes
+        - expiring_ingredients
+        - recent_recipes
+      properties:
+        registered_recipe_count:
+          type: integer
+          minimum: 0
+          description: 'KPI① 등록 레시피 수.'
+          example: 12
+        makeable_recipe_count:
+          type: integer
+          minimum: 0
+          description: 'KPI② 지금 만들 수 있는(매칭률 100%) 레시피 수.'
+          example: 3
+        inventory_ingredient_count:
+          type: integer
+          minimum: 0
+          description: 'KPI③ 내 재고 종수(활성 재고 항목 수).'
+          example: 8
+        expiring_soon_count:
+          type: integer
+          minimum: 0
+          description: 'KPI④ 임박 재료(D-3, 유통기한 D-day ≤ 3) 종수.'
+          example: 2
+        category_distribution:
+          type: array
+          description: '(선택) KPI① 부가 정보 — 등록 레시피의 카테고리 분포.'
+          items:
+            type: object
+            required: [category, count]
+            properties:
+              category:
+                type: string
+                nullable: true
+                description: 카테고리명. 미분류는 null.
+                example: 한식
+              count:
+                type: integer
+                example: 5
+          example:
+            - { category: 한식, count: 5 }
+            - { category: 양식, count: 4 }
+            - { category: null, count: 3 }
+        makeable_recipes:
+          type: array
+          description: '패널① 지금 만들 수 있는 레시피(매칭률 100%). RecipeListItem 재사용.'
+          items:
+            $ref: '#/components/schemas/RecipeListItem'
+        expiring_ingredients:
+          type: array
+          description: '패널② 유통기한 임박(D-3) 재고. InventoryItem 재사용(expires_at 포함).'
+          items:
+            $ref: '#/components/schemas/InventoryItem'
+        recent_recipes:
+          type: array
+          description: '패널③ 최근 추가한 레시피(최신순). RecipeListItem 재사용.'
+          items:
+            $ref: '#/components/schemas/RecipeListItem'
+      example:
+        registered_recipe_count: 12
+        makeable_recipe_count: 3
+        inventory_ingredient_count: 8
+        expiring_soon_count: 2
+        category_distribution:
+          - { category: 한식, count: 5 }
+          - { category: 양식, count: 4 }
+          - { category: null, count: 3 }
+        makeable_recipes:
+          - id: rcp_01HZX2KpQ
+            title: 김치찌개
+            category: 한식
+            photo_url: https://cdn.example.com/u/rcp_01HZX2KpQ.jpg
+            ingredient_count: 5
+            missing_count: 0
+            cook_time_minutes: 15
+            rating: { average: 4.5, count: 12 }
+            owner_id: usr_01HZX2Kme
+            created_at: '2026-07-24T10:00:00Z'
+            updated_at: '2026-07-24T10:00:00Z'
+        expiring_ingredients:
+          - id: inv_01HZX2Kzz
+            ingredient_id: ing_01HZX2Kab
+            ingredient_name: 양파
+            quantity: 3
+            unit: 개
+            expires_at: '2026-07-27'
+            storage_location: 냉장실
+            owner_id: usr_01HZX2Kme
+            created_at: '2026-07-24T11:00:00Z'
+            updated_at: '2026-07-24T11:00:00Z'
+        recent_recipes:
+          - id: rcp_01HZX9ABC
+            title: 된장찌개
+            category: 한식
+            photo_url: null
+            ingredient_count: 4
+            cook_time_minutes: 20
+            rating: { average: null, count: 0 }
+            owner_id: usr_01HZX2Kme
+            created_at: '2026-07-25T08:00:00Z'
+            updated_at: '2026-07-25T08:00:00Z'
 
     # ---- 식재료 마스터 ----
     Ingredient:
@@ -1087,6 +1411,30 @@ components:
           nullable: true
           description: 기본 단위
           example: 개
+        aliases:
+          type: array
+          description: '[v2.3.0/US-016] 별칭(검색용, 복수). 미입력 시 빈 배열. q 검색이 별칭도 매칭.'
+          items:
+            type: string
+          example: [둥근양파, onion]
+        kcal_per_100g:
+          type: number
+          format: float
+          nullable: true
+          minimum: 0
+          description: '[v2.3.0/US-016] 100g당 칼로리(kcal). 마스터 참고 필드(레시피 영양 자동계산 아님). 미입력 시 null.'
+          example: 40
+        default_storage:
+          type: string
+          nullable: true
+          enum: [냉장, 냉동, 실온]
+          description: '[v2.3.0/US-016] 기본 보관방법. 3종 중 하나 또는 null.'
+          example: 냉장
+        memo:
+          type: string
+          nullable: true
+          description: '[v2.3.0/US-016] 자유 메모. 미입력 시 null.'
+          example: 봉지째 냉장 보관
         owner_id:
           type: string
           example: usr_01HZX2Kme
@@ -1103,13 +1451,17 @@ components:
         name: 양파
         category: 채소
         default_unit: 개
+        aliases: [둥근양파, onion]
+        kcal_per_100g: 40
+        default_storage: 냉장
+        memo: 봉지째 냉장 보관
         owner_id: usr_01HZX2Kme
         created_at: '2026-07-24T09:30:00Z'
         updated_at: '2026-07-24T09:30:00Z'
 
     IngredientWriteRequest:
       type: object
-      description: 식재료 마스터 생성/수정 공통 본문 (US-008)
+      description: 식재료 마스터 생성/수정 공통 본문 (US-008, 확장필드 US-016)
       required: [name]
       properties:
         name:
@@ -1124,10 +1476,38 @@ components:
           type: string
           nullable: true
           example: 개
+        aliases:
+          type: array
+          description: '[v2.3.0/US-016] 별칭(복수, 선택). 생략/빈 배열 허용. 검색용.'
+          items:
+            type: string
+          example: [둥근양파, onion]
+        kcal_per_100g:
+          type: number
+          format: float
+          nullable: true
+          minimum: 0
+          description: '[v2.3.0/US-016] 100g당 칼로리(kcal, 선택). 미입력 시 null.'
+          example: 40
+        default_storage:
+          type: string
+          nullable: true
+          enum: [냉장, 냉동, 실온]
+          description: '[v2.3.0/US-016] 기본 보관방법. 냉장/냉동/실온 중 하나만 허용(그 외 400).'
+          example: 냉장
+        memo:
+          type: string
+          nullable: true
+          description: '[v2.3.0/US-016] 자유 메모(선택).'
+          example: 봉지째 냉장 보관
       example:
         name: 양파
         category: 채소
         default_unit: 개
+        aliases: [둥근양파, onion]
+        kcal_per_100g: 40
+        default_storage: 냉장
+        memo: 봉지째 냉장 보관
 
     IngredientListResponse:
       type: object
@@ -1150,6 +1530,10 @@ components:
             name: 양파
             category: 채소
             default_unit: 개
+            aliases: [둥근양파, onion]
+            kcal_per_100g: 40
+            default_storage: 냉장
+            memo: 봉지째 냉장 보관
             owner_id: usr_01HZX2Kme
             created_at: '2026-07-24T09:30:00Z'
             updated_at: '2026-07-24T09:30:00Z'
@@ -1184,6 +1568,12 @@ components:
           nullable: true
           description: 유통기한 (선택)
           example: '2026-08-10'
+        storage_location:
+          type: string
+          nullable: true
+          enum: [냉장실, 냉동실, 실온]
+          description: '[v2.3.0/US-017] 보관위치. 3종 중 하나 또는 null. 표시·관리 용도(매칭 판정 미반영).'
+          example: 냉장실
         owner_id:
           type: string
           example: usr_01HZX2Kme
@@ -1202,6 +1592,7 @@ components:
         quantity: 3
         unit: 개
         expires_at: '2026-08-10'
+        storage_location: 냉장실
         owner_id: usr_01HZX2Kme
         created_at: '2026-07-24T11:00:00Z'
         updated_at: '2026-07-24T11:00:00Z'
@@ -1227,11 +1618,18 @@ components:
           format: date
           nullable: true
           example: '2026-08-10'
+        storage_location:
+          type: string
+          nullable: true
+          enum: [냉장실, 냉동실, 실온]
+          description: '[v2.3.0/US-017] 보관위치. 냉장실/냉동실/실온 중 하나만 허용(그 외 400). 선택.'
+          example: 냉장실
       example:
         ingredient_id: ing_01HZX2Kab
         quantity: 3
         unit: 개
         expires_at: '2026-08-10'
+        storage_location: 냉장실
 
     InventoryListResponse:
       type: object
@@ -1256,6 +1654,7 @@ components:
             quantity: 3
             unit: 개
             expires_at: '2026-08-10'
+            storage_location: 냉장실
             owner_id: usr_01HZX2Kme
             created_at: '2026-07-24T11:00:00Z'
             updated_at: '2026-07-24T11:00:00Z'
